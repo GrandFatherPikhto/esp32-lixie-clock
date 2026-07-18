@@ -8,6 +8,6 @@
 #define CLOCK_LED_NUMBERS            (CLOCK_DIGITS * 10)
 
 // Интервал синхронизации с NTP (в секундах) – теперь можно менять в одном месте
-#define SNTP_SYNC_INTERVAL_SECONDS CONFIG_SNTP_SYNC_INTERVAL_PERIOD * 1000
+#define SNTP_SYNC_INTERVAL_SECONDS (CONFIG_SNTP_SYNC_INTERVAL_PERIOD * 1000)
 
 #endif
