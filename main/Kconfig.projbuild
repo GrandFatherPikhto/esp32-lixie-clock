@@ -1,0 +1,45 @@
+menu "Clock Configuration"
+
+    config LED_GPIO
+        int "GPIO number for LED strip"
+        default 14
+        range 0 39
+        help
+            GPIO pin connected to the DIN of the LED strip.
+
+    config NUM_DIGITS
+        int "Number of digit displays"
+        default 6
+        range 1 8
+        help
+            Number of 7-segment (actually 10-LED) displays. Usually 4 (HH:MM) or 6 (HH:MM:SS).
+
+
+    config SNTP_TIME_SERVER
+        string "SNTP server name"
+        default "pool.ntp.org"
+        help
+            Hostname of the main SNTP server.
+
+    choice SNTP_TIME_SYNC_METHOD
+        prompt "Time synchronization method"
+        default SNTP_TIME_SYNC_METHOD_IMMED
+        help
+            Time synchronization method.
+
+        config SNTP_TIME_SYNC_METHOD_IMMED
+            bool "update time immediately when received"
+        config SNTP_TIME_SYNC_METHOD_SMOOTH
+            bool "update time with smooth method (adjtime)"
+        config SNTP_TIME_SYNC_METHOD_CUSTOM
+            bool "custom implementation"
+    endchoice
+
+    config SNTP_SYNC_INTERVAL_PERIOD
+        int "Time synchronization period"
+        default 3600
+        help
+            Time synchronization period via the SNTP server (in seconds)
+
+
+endmenu
