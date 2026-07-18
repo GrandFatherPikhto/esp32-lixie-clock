@@ -53,7 +53,7 @@ idf.py menuconfig
 | **Time synchronization method** | Способ синхронизации: `immediate` (мгновенная) или `smooth` (плавная подстройка). |
 | **Time synchronization period** | Интервал опроса NTP‑сервера в секундах (по умолчанию 3600 = 1 час). |
 
-Также проверьте параметры Wi‑Fi в разделе **`Example Connection Configuration`** – укажите SSID и пароль.
+    Также проверьте параметры Wi‑Fi в разделе **`Example Connection Configuration`** – укажите SSID и пароль.
 
 ---
 
