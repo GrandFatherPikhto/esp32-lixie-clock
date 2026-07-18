@@ -1,126 +1,103 @@
 # ⏰ Lixie‑style Edge‑Lit Clock on ESP32
 
-Цифровые часы с «псевдоламповой» индикацией на основе светодиодной ленты WS2812 и сегментов из оргстекла (Edge‑Lit / Lixie‑подобные). В основе – ESP32, синхронизация времени по NTP, автоматическая настройка через Wi‑Fi. Код написан на C для ESP‑IDF v5.x.
+A digital clock with "pseudo‑vacuum‑tube" display based on WS2812 LED strips and edge‑lit acrylic segments (Lixie‑style). Powered by ESP32, it synchronizes time via NTP over Wi‑Fi, and is written in C for ESP‑IDF v5.x.
 
 ---
 
-## ✨ Особенности
+## ✨ Features
 
-- Отображение времени (часы:минуты:секунды) на **6 разрядах** (настраивается).
-- Каждая цифра формируется из **10 светодиодов** (0…9) – зажигается нужная цифра в каждом разряде.
-- Плавная смена цветов для каждой пары разрядов (часы, минуты, секунды) – вращение по цветовому кругу HSV.
-- При старте (до синхронизации времени) – **загрузочная анимация**: бегущие цифры 0…9 с изменяющимся цветом.
-- Автоматическая синхронизация времени по **NTP** (интервал настраивается).
-- Wi‑Fi остаётся включённым для периодических обновлений времени (не требует переподключения).
-- Настройка параметров через **menuconfig** (пин, количество разрядов, NTP‑сервер, интервал синхронизации).
-
----
-
-## 🧩 Аппаратная часть
-
-### Компоненты
-- Плата ESP32 (любая, например, ESP32‑DevKitC).
-- Адресная светодиодная лента **WS2812** (или совместимая, например SK6812) – количество светодиодов = `NUM_DIGITS * 10`.
-- 3D‑печатные или лазерные сегменты с торцевой подсветкой (Edge‑Lit) – по 10 светодиодов на цифру.
-
-### Подключение
-
-| ESP32 GPIO | Назначение         |
-|------------|--------------------|
-| **GPIO14** (по умолчанию) | DIN ленты WS2812  |
-| 3.3V / 5V  | Питание ленты (учитывайте ток!) |
-| GND        | Общий провод       |
-
-> ⚠️ Убедитесь, что блок питания способен отдать достаточный ток (обычно ~60 мА на светодиод при полной яркости). Для 60 светодиодов – около 3.6 А при белом цвете. Рекомендуется внешний источник 5В/2А.
+- Displays time (hours:minutes:seconds) on **6 digits** (configurable).
+- Each digit uses **10 LEDs** (0–9) – only the required digit lights up per position.
+- Smooth colour cycling for each pair of digits (hours, minutes, seconds) using HSV rotation.
+- **Boot animation** (before time sync): digits 0–9 chase across all positions with changing colours.
+- Automatic time synchronisation via **NTP** (interval configurable).
+- Wi‑Fi stays connected for periodic time updates (no re‑connection needed).
+- All settings adjustable through **menuconfig** (GPIO, digit count, NTP server, sync interval).
 
 ---
 
-## ⚙️ Настройка через `menuconfig`
+## 🧩 Hardware
 
-Перед сборкой выполните настройку проекта:
+### Components
+- Any ESP32 board (e.g., ESP32‑DevKitC).
+- Addressable LED strip **WS2812** (or compatible, e.g., SK6812) – number of LEDs = `NUM_DIGITS × 10`.
+- 3D‑printed or laser‑cut edge‑lit segments – 10 LEDs per digit.
+
+### Wiring
+
+| ESP32 GPIO | Connection           |
+|------------|----------------------|
+| **GPIO14** (default) | WS2812 DIN          |
+| 3.3V / 5V  | LED strip power (mind the current!) |
+| GND        | Common ground        |
+
+> ⚠️ Ensure your power supply can deliver enough current (approx. 60 mA per LED at full brightness). For 60 LEDs, this is ~3.6 A at white. A 5 V / 2 A external supply is recommended.
+
+---
+
+## ⚙️ Configuration via `menuconfig`
+
+Before building, run:
 
 ```bash
 idf.py menuconfig
 ```
 
-В разделе **`Clock Configuration`** доступны параметры:
-
-| Параметр | Описание |
-|----------|----------|
-| **GPIO number for LED strip** | Номер вывода ESP32, к которому подключена лента (по умолчанию 14). |
-| **Number of digit displays** | Количество разрядов (обычно 4 для HH:MM или 6 для HH:MM:SS). |
-| **SNTP server name** | Адрес NTP‑сервера (по умолчанию `pool.ntp.org`). |
-| **Time synchronization method** | Способ синхронизации: `immediate` (мгновенная) или `smooth` (плавная подстройка). |
-| **Time synchronization period** | Интервал опроса NTP‑сервера в секундах (по умолчанию 3600 = 1 час). |
-
-    Также проверьте параметры Wi‑Fi в разделе **`Example Connection Configuration`** – укажите SSID и пароль.
+All settings are split into two main sections:
 
 ---
 
-## ⚙️ Настройка через `menuconfig`
+### 1️⃣ Wi‑Fi Connection
 
-Перед сборкой проекта откройте меню конфигурации:
+The clock **gets time via NTP over the Internet**, so Wi‑Fi is required.
 
-```bash
-idf.py menuconfig
-```
+Wi‑Fi settings are **not** under `Clock Configuration` but in the standard **`Example Connection Configuration`** section.
 
-Все параметры разделены на две основные группы:
+- Navigate to **`Example Connection Configuration`** → **`Wi-Fi SSID`** and **`Wi-Fi Password`**.
+- Enter your network name (SSID) and password.
+- Ensure the connection method is set to **`Wi-Fi`** (default).
 
----
+For hidden networks, adjust **`Wi-Fi Scan Method`** → choose `Fast scan` or `All channel scan`.
 
-### 1️⃣ Подключение к Wi‑Fi
-
-Ваши часы **получают время по NTP через интернет**, поэтому им необходимо подключение к Wi‑Fi.
-
-Настройки Wi‑Fi находятся не в разделе `Clock Configuration`, а в стандартном разделе **`Example Connection Configuration`**.
-
-- Зайдите в меню:  
-  **`Example Connection Configuration`** → **`Wi-Fi SSID`** и **`Wi-Fi Password`**.
-- Введите имя вашей сети (SSID) и пароль.  
-- Убедитесь, что выбран тип подключения: **`Wi-Fi`** (по умолчанию).
-
-Если вы используете скрытую сеть, включите опцию **`Wi-Fi Scan Method`** → **`Fast scan`** или **`All channel scan`**.
-
-> 💡 **Важно:** ESP32 подключается к Wi‑Fi один раз при старте (`init_sntp()`), а затем остаётся в сети для периодических обновлений времени. Если вы хотите экономить энергию, можете вручную доработать код для отключения Wi‑Fi между сеансами синхронизации.
+> 💡 **Note:** The ESP32 connects to Wi‑Fi once at startup (`init_sntp()`) and remains connected for periodic updates. If you want to save power, you can modify the code to disconnect between synchronisations.
 
 ---
 
-### 2️⃣ Синхронизация времени (NTP)
+### 2️⃣ NTP Time Synchronisation
 
-Настройки NTP находятся в разделе **`Clock Configuration`** (ваш собственный пункт меню).
+NTP settings are under **`Clock Configuration`** (your custom menu).
 
-| Параметр | Описание |
-|----------|----------|
-| **`SNTP server name`** | Адрес NTP‑сервера (по умолчанию `pool.ntp.org`). Можно заменить на свой, например `time.google.com` или `ru.pool.ntp.org`. |
-| **`Time synchronization method`** | Способ синхронизации: <br> • **`immediate`** – время устанавливается мгновенно при получении ответа от сервера.<br> • **`smooth`** – плавная корректировка (adjtime) – избегает скачков времени.<br> • **`custom`** – для собственной реализации (не используется в данном проекте). |
-| **`Time synchronization period`** | Интервал опроса NTP‑сервера в **секундах**. По умолчанию 3600 (1 час). Если вам нужно чаще, уменьшите значение (например, 600 для 10 минут). |
-
----
-
-### 3️⃣ Аппаратная настройка (также в `Clock Configuration`)
-
-| Параметр | Описание |
-|----------|----------|
-| **`GPIO number for LED strip`** | Номер пина ESP32, к которому подключена лента WS2812 (по умолчанию 14). |
-| **`Number of digit displays`** | Количество разрядов часов: 4 для HH:MM, 6 для HH:MM:SS (по умолчанию 6). |
+| Parameter | Description |
+|-----------|-------------|
+| **`SNTP server name`** | NTP server address (default `pool.ntp.org`). You can change to `time.google.com`, `ru.pool.ntp.org`, etc. |
+| **`Time synchronization method`** | • `immediate` – sets time instantly on response.<br> • `smooth` – gradual adjustment (adjtime) to avoid jumps.<br> • `custom` – for your own implementation (not used here). |
+| **`Time synchronization period`** | Interval in **seconds** (default 3600 = 1 hour). Set lower (e.g., 600) for more frequent updates. |
 
 ---
 
-## 🌐 Как работает синхронизация времени
+### 3️⃣ Hardware Settings (also in `Clock Configuration`)
 
-1. **При старте** ESP32 включает Wi‑Fi, подключается к вашей сети и отправляет запрос к NTP‑серверу.
-2. **После получения ответа** системное время устанавливается, и флаг `time_is_synced()` становится `true`.
-3. **Дисплей** переключается с загрузочной анимации на отображение текущего времени.
-4. **Каждый час** (или с заданным вами интервалом) ESP32 автоматически опрашивает NTP‑сервер и корректирует время – без переподключения к Wi‑Fi (соединение остаётся активным).
-
-> Если интернет временно недоступен, часы продолжат отображать время, используя встроенный RTC (реального времени на ESP32 нет, поэтому время будет дрейфовать до следующей успешной синхронизации).
+| Parameter | Description |
+|-----------|-------------|
+| **`GPIO number for LED strip`** | Pin connected to WS2812 DIN (default 14). |
+| **`Number of digit displays`** | How many digits: 4 for HH:MM, 6 for HH:MM:SS (default 6). |
 
 ---
 
-## ✅ Проверка настроек после сборки
+## 🌐 How Time Synchronisation Works
 
-После прошивки вы увидите в мониторе (команда `idf.py monitor`) логи:
+1. **At startup**, ESP32 enables Wi‑Fi, connects to your network, and queries the NTP server.
+2. **After receiving the response**, the system time is set and the flag `time_is_synced()` becomes `true`.
+3. **The display** switches from boot animation to showing the current time.
+4. **Every hour** (or your configured interval), ESP32 automatically polls the NTP server and adjusts the time – without re‑connecting to Wi‑Fi (the connection stays active).
+
+> If the Internet is temporarily unavailable, the clock continues showing time using its internal RTC (ESP32 has no battery‑backed RTC, so it will drift until the next successful sync).
+
+---
+
+## ✅ Verifying Settings After Flashing
+
+After flashing, monitor the logs (`idf.py monitor`) and you should see:
 
 ```
 I (xxxx) wifi: station: <your_SSID> connected
@@ -128,73 +105,73 @@ I (xxxx) sntp_sync: Time synchronized successfully
 I (xxxx) main: Time sync completed, sync task will exit
 ```
 
-Если синхронизация не происходит, проверьте:
-- правильность SSID и пароля;
-- доступность NTP‑сервера в вашей сети (проверьте пинг с компьютера);
-- не блокирует ли ваш роутер NTP‑трафик (порт 123 UDP).
+If synchronisation fails, check:
+- SSID and password correctness;
+- NTP server reachability (ping from your PC);
+- Router not blocking NTP traffic (UDP port 123).
 
 ---
 
-## 🛠️ Сборка и прошивка
+## 🛠️ Build and Flash
 
-1. Установите ESP‑IDF (рекомендуется версия 5.3 или 5.5.3).
-2. Клонируйте репозиторий или скопируйте файлы проекта в папку.
-3. Откройте терминал, активируйте окружение IDF:
+1. Install ESP‑IDF (recommended v5.3 or v5.5.3).
+2. Clone or copy the project files into a folder.
+3. Open a terminal and activate the IDF environment:
    ```bash
-   . $HOME/esp/esp-idf/export.sh   # для Linux/macOS
-   # или
-   .\export.ps1                    # для Windows (PowerShell)
+   . $HOME/esp/esp-idf/export.sh   # Linux/macOS
+   # or
+   .\export.ps1                    # Windows (PowerShell)
    ```
-4. Перейдите в папку проекта:
+4. Navigate to the project directory:
    ```bash
    cd /path/to/clock
    ```
-5. Настройте параметры через `idf.py menuconfig`.
-6. Соберите и прошейте:
+5. Configure via `idf.py menuconfig`.
+6. Build and flash:
    ```bash
    idf.py build flash monitor
    ```
 
-После запуска ESP32 подключится к Wi‑Fi, синхронизирует время и начнёт отображение. До получения времени – анимация загрузки.
+After boot, ESP32 connects to Wi‑Fi, syncs time, and starts displaying it. Until then, you’ll see the boot animation.
 
 ---
 
-## 🧱 Архитектура кода
+## 🧱 Code Architecture
 
-Проект разделён на логические модули для упрощения поддержки и модификации:
+The project is modular for easier maintenance and extension:
 
-| Модуль | Назначение |
-|--------|------------|
-| **`led_display`** | Инициализация RMT‑канала и энкодера для управления лентой WS2812. Предоставляет функцию `led_display_send()` для отправки буфера пикселей. |
-| **`clock_ui`** | Формирование кадров: преобразование HSV→RGB, установка цифр в нужные позиции. Функции `clock_ui_fill_time()` (текущее время) и `clock_ui_fill_animation()` (загрузочная анимация). |
-| **`sntp_sync`** | Синхронизация времени: подключение к Wi‑Fi, инициализация SNTP, автоматическое обновление с заданным интервалом. Предоставляет `init_sntp()` и `time_is_synced()`. |
-| **`main`** | Задачи FreeRTOS: `sync_task` (однократный запуск синхронизации) и `display_task` (постоянное обновление дисплея, переключение между анимацией и часами). |
-| **`led_strip_encoder`** | Специфичный для WS2812 RMT‑энкодер, преобразующий байты RGB в последовательность импульсов. |
-| **`app_config.h`** | Глобальные макросы (пин, частота, количество разрядов, интервал синхронизации) – связаны с параметрами menuconfig. |
+| Module | Purpose |
+|--------|---------|
+| **`led_display`** | Initialises RMT channel and encoder for WS2812. Provides `led_display_send()` to push pixel buffers. |
+| **`clock_ui`** | Frame generation: HSV→RGB conversion, digit placement. Functions `clock_ui_fill_time()` (current time) and `clock_ui_fill_animation()` (boot animation). |
+| **`sntp_sync`** | Time sync: Wi‑Fi connection, SNTP initialisation, automatic updates at configured interval. Exports `init_sntp()` and `time_is_synced()`. |
+| **`main`** | FreeRTOS tasks: `sync_task` (one‑off sync) and `display_task` (continuous display refresh, switching between animation and clock). |
+| **`led_strip_encoder`** | WS2812‑specific RMT encoder that converts RGB bytes into pulse sequences. |
+| **`app_config.h`** | Global macros (pin, frequency, digit count, sync interval) tied to menuconfig parameters. |
 
-### Потоки выполнения (FreeRTOS)
-- **`sync_task`** – приоритет 5, запускается один раз, вызывает `init_sntp()`, после успеха устанавливает флаг `sntp_synced` и завершается.
-- **`display_task`** – приоритет 4, циклически проверяет флаг. Если время ещё не синхронизировано – показывает анимацию, иначе – текущее время. Обновление каждые 500 мс.
-
----
-
-## 📦 Основные функции
-
-| Функция | Описание |
-|---------|----------|
-| `led_display_init()` | Инициализация RMT и энкодера. Вызывается один раз при старте. |
-| `led_display_send(pixels, size)` | Отправляет массив пикселей на ленту (блокирующий вызов). |
-| `clock_ui_init()` | Устанавливает часовой пояс (MSK‑3) и сбрасывает состояния. |
-| `clock_ui_fill_time()` | Заполняет глобальный буфер `led_strip_pixels` данными текущего времени (часы, минуты, секунды) с цветами, изменяющимися по кругу. |
-| `clock_ui_fill_animation()` | Заполняет буфер анимацией – все разряды показывают одну цифру (0→9), цвет циклически меняется. |
-| `init_sntp()` | Подключается к Wi‑Fi, инициализирует SNTP с заданным интервалом, ждёт первой синхронизации. |
-| `time_is_synced()` | Возвращает `true`, если время уже было успешно получено. |
+### FreeRTOS Tasks
+- **`sync_task`** – priority 5, runs once, calls `init_sntp()`, sets `sntp_synced` flag on success, then deletes itself.
+- **`display_task`** – priority 4, loops checking the flag. If time not yet synced → shows animation, else → shows current time. Updates every 500 ms.
 
 ---
 
-## 🔧 Зависимости
+## 📦 Key Functions
 
-Проект использует компонент `protocol_examples_common` из состава ESP‑IDF – он обеспечивает подключение к Wi‑Fi через `example_connect()`. В файле `idf_component.yml` прописана зависимость:
+| Function | Description |
+|----------|-------------|
+| `led_display_init()` | Initialises RMT and encoder. Called once at start. |
+| `led_display_send(pixels, size)` | Sends pixel array to the strip (blocking). |
+| `clock_ui_init()` | Sets timezone (MSK‑3) and resets state. |
+| `clock_ui_fill_time()` | Fills global `led_strip_pixels` with current time digits (hours, minutes, seconds) with cycling colours. |
+| `clock_ui_fill_animation()` | Fills buffer with animation – all digits show one digit (0→9) with rotating colour. |
+| `init_sntp()` | Connects to Wi‑Fi, initialises SNTP with given interval, waits for first sync. |
+| `time_is_synced()` | Returns `true` if time has been successfully obtained. |
+
+---
+
+## 🔧 Dependencies
+
+This project uses the `protocol_examples_common` component from ESP‑IDF for Wi‑Fi connection (`example_connect()`). The dependency is declared in `idf_component.yml`:
 
 ```yaml
 dependencies:
@@ -202,27 +179,27 @@ dependencies:
     path: ${IDF_PATH}/examples/common_components/protocol_examples_common
 ```
 
-Остальные компоненты (драйвер RMT, SNTP, NVS, FreeRTOS) входят в состав ESP‑IDF.
+All other components (RMT driver, SNTP, NVS, FreeRTOS) are part of ESP‑IDF.
 
 ---
 
-## 📄 Лицензия
+## 📄 License
 
-Код распространяется под лицензией **Apache‑2.0** (исходные файлы от Espressif) и **Unlicense / CC0‑1.0** для авторских дополнений (см. заголовки файлов).
-
----
-
-## 🤝 Благодарности
-
-Проект вдохновлён концепцией *Lixie* и *Edge‑Lit* часов. Использует примеры от Espressif (SNTP, RMT‑энкодер для WS2812).
+The code is distributed under **Apache‑2.0** (original Espressif files) and **Unlicense / CC0‑1.0** for custom additions (see file headers).
 
 ---
 
-## ✏️ Доработки и идеи
+## 🤝 Acknowledgements
 
-- Добавить режим отображения даты или температуры (при наличии датчика).
-- Реализовать переключение цветовых схем по нажатию кнопки.
-- Встроить веб‑интерфейс для настройки без перепрошивки.
-- Оптимизировать энергопотребление (отключение Wi‑Fi между синхронизациями).
+Inspired by the *Lixie* and *Edge‑Lit* clock concepts. Uses examples from Espressif (SNTP, RMT encoder for WS2812).
 
-Если у вас возникнут вопросы или предложения – создавайте Issue в репозитории проекта.
+---
+
+## ✏️ Future Ideas
+
+- Add date or temperature display (with a sensor).
+- Switch colour schemes via a button.
+- Build a web interface for configuration without re‑flashing.
+- Optimise power consumption (disconnect Wi‑Fi between syncs).
+
+If you have questions or suggestions, please open an Issue in the repository.
