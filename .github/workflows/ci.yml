@@ -1,0 +1,81 @@
+# CI for the ESP32 Lixie clock.
+#
+# Runs on every push / pull request:
+#   - Tier 1: pytest suite for the Python tools (tools/*.py) - no board needed
+#   - Tier 2: host C unit tests for the pure core/ logic (Unity) - Linux native
+#   - Tier 3: build the firmware for every supported ESP32 target (matrix)
+#
+# Everything runs on Ubuntu runners (real Linux), so no local/WSL setup is
+# required and the results appear as a green/red check on each commit.
+
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Tier 1 - Python tooling tests (no hardware, no ESP-IDF)
+  # ---------------------------------------------------------------------------
+  python-tools:
+    name: Python tools (pytest)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install tool dependencies
+        run: pip install -r tools/requirements.txt
+
+      - name: Run pytest suite
+        run: pytest tests -v
+
+  # ---------------------------------------------------------------------------
+  # Tier 2 - host C unit tests for core/ (Unity, runs natively on Linux)
+  # ---------------------------------------------------------------------------
+  host-tests:
+    name: Host C unit tests (core, Unity)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: sudo apt-get update && sudo apt-get install -y gcc
+
+      # run_tests.sh needs the vendored Unity source, which ships with ESP-IDF.
+      - name: Fetch ESP-IDF (for the Unity source)
+        run: |
+          git clone --depth 1 -b v6.0.2 --recursive \
+            https://github.com/espressif/esp-idf.git "$HOME/esp-idf"
+
+      - name: Build and run host tests
+        run: |
+          export IDF_PATH="$HOME/esp-idf"
+          bash tests/c/run_tests.sh
+
+  # ---------------------------------------------------------------------------
+  # Tier 3 - build the firmware for every supported target (parallel matrix)
+  # ---------------------------------------------------------------------------
+  firmware:
+    name: Build firmware (${{ matrix.target }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ESP-IDF v6.0.2 + toolchain for ${{ matrix.target }}
+        run: |
+          git clone --depth 1 -b v6.0.2 --recursive \
+            https://github.com/espressif/esp-idf.git "$HOME/esp-idf"
+          "$HOME/esp-idf/install.sh" "${{ matrix.target }}"
+
+      - name: Build
+        run: |
+          . "$HOME/esp-idf/export.sh"
+          idf.py set-target "${{ matrix.target }}"
+          idf.py build
