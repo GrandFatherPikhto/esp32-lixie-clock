@@ -209,14 +209,30 @@ pip install -r tools/requirements.txt
 
 ### 🛠️ Host C unit-тесты (Уровень 2 — чистая логика, без платы, нужен Linux/WSL)
 
-Чистая логика прошивки вынесена в [`core/`](core/) (разбор/валидация конфигурации, математика часового пояса, отрисовка цифр) **без зависимостей от ESP-IDF**, поэтому её можно тестировать нативно на Linux-хосте через Unity. Запуск из WSL2:
+Чистая логика прошивки вынесена в [`core/`](core/) (разбор/валидация конфигурации, математика часового пояса, отрисовка цифр) **без зависимостей от ESP-IDF**, поэтому её можно тестировать нативно на Linux-хосте через Unity. Host-тесты работают только на Linux — запускайте их из **WSL2**:
 
-```bash
-. /home/grand/esp/esp-idf-v6.0/export.sh     # или ваш IDF
-tests/c/run_tests.sh
+1. Откройте терминал WSL (Windows Terminal или `wsl -d Ubuntu-24.04`).
+2. Активируйте окружение ESP-IDF установки IDF внутри WSL (здесь v6.0):
+   ```bash
+   . /home/grand/esp/esp-idf-v6.0/export.sh
+   ```
+3. Перейдите в проект — из WSL Windows-папка смонтирована в `/mnt/d`:
+   ```bash
+   cd /mnt/d/Projects/Espressif/Clock/clock
+   ```
+4. Соберите и запустите host-тесты:
+   ```bash
+   bash tests/c/run_tests.sh
+   ```
+
+Скрипт собирает `core/src/*.c` + Unity (из `$IDF_PATH`) + [`tests/c/test_core.c`](tests/c/test_core.c) в `build_host/` и запускает. Ожидаемый результат:
+
+```
+14 Tests 0 Failures 0 Ignored
+OK
 ```
 
-Скрипт собирает `core/src/*.c` + Unity (из `$IDF_PATH`) + [`tests/c/test_core.c`](tests/c/test_core.c) в `build_host/` и запускает — 14 тестов, 0 ошибок. Покрываются именно те функции, которые использует прошивка (`core_config_set_value`, `core_time_format_tz`, `core_display_set_digit`, ...).
+Покрываются именно те функции, которые использует прошивка (`core_config_set_value`, `core_time_format_tz`, `core_display_set_digit`, ...).
 
 Прошивка не привязана к конкретному чипу — достаточно, чтобы пин ленты соответствовал вашей разводке.
 
