@@ -30,7 +30,12 @@ static int active_digits(void)
 void clock_ui_init(void)
 {
     app_config_apply_timezone();
-    memset(color_phase, 0, sizeof(color_phase));
+    /* Restore the original per-pair palette: each pair of digits (hours,
+     * minutes, seconds) starts at its own hue - red (0), green (120), blue
+     * (240) - and then rotates smoothly from there. */
+    for (int p = 0; p < COLOR_PAIRS; p++) {
+        color_phase[p] = (uint16_t)(p * 120);
+    }
     anim_step = 0;
     ESP_LOGI(TAG, "Clock UI initialized (timezone applied)");
 }
@@ -53,20 +58,19 @@ void clock_ui_fill_time(uint8_t *pixels)
 
     for (int i = 0; i < digits_active; i++) {
         uint8_t d = core_display_digit_value(i, hour, minute, second);
-        uint16_t hue = (color_mode == 1) ? fixed_hue : (color_phase[i / 2] % 360);
+        int pair = i / 2;
+        uint16_t hue = (color_mode == 1) ? fixed_hue : (color_phase[pair] % 360);
 
         uint32_t r, g, b;
         core_display_hsv2rgb(hue, 100, 100, &r, &g, &b);
         core_display_set_digit(pixels, CLOCK_LED_NUMBERS_MAX, i, d,
                                (uint8_t)r, (uint8_t)g, (uint8_t)b, brightness);
-    }
 
-    /* Advance the hue of every active pair once per frame */
-    if (color_mode == 0) {
-        int pairs = (digits_active + 1) / 2;
-        if (pairs > COLOR_PAIRS) pairs = COLOR_PAIRS;
-        for (int p = 0; p < pairs; p++) {
-            color_phase[p]++;
+        /* Original behavior: a pair's hue advances once per digit rendered in
+         * it, so each pair (hours / minutes / seconds) keeps its own colour
+         * and rotates at its own pace from its own base hue. */
+        if (color_mode == 0) {
+            color_phase[pair]++;
         }
     }
 }

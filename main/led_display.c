@@ -46,6 +46,21 @@ void led_display_send(const uint8_t *pixels, size_t size)
         ESP_LOGE(TAG, "LED display not initialized");
         return;
     }
-    ESP_ERROR_CHECK(rmt_transmit(led_chan, led_encoder, pixels, size, &tx_config));
-    ESP_ERROR_CHECK(rmt_tx_wait_all_done(led_chan, portMAX_DELAY));
+    if (pixels == NULL || size == 0 || size > CLOCK_LED_NUMBERS_MAX * 3) {
+        ESP_LOGW(TAG, "Invalid frame: pixels=%p size=%u", (const void *)pixels,
+                 (unsigned)size);
+        return;
+    }
+    esp_err_t err = rmt_transmit(led_chan, led_encoder, pixels, size, &tx_config);
+    if (err != ESP_OK) {
+        ESP_LOGE(TAG, "rmt_transmit failed: %s", esp_err_to_name(err));
+        return;
+    }
+    /* Bounded wait: never block the display task forever if RMT stalls, which
+     * would freeze the animation on the last frame. */
+    err = rmt_tx_wait_all_done(led_chan, pdMS_TO_TICKS(500));
+    if (err != ESP_OK) {
+        ESP_LOGW(TAG, "RMT tx not done in time (%s); skipping frame",
+                 esp_err_to_name(err));
+    }
 }

@@ -67,6 +67,7 @@ PROMPT = b"clock> "
 EOL = "\r\n"
 DEFAULT_BAUD = 115200
 DEFAULT_TIMEOUT = 8.0   # seconds to wait for a device response (override via config.yaml `serial.timeout`)
+PASSWORD_MASK = "******"   # replaces the Wi-Fi password in any console output
 
 # Device-side keys accepted by the firmware `set` command.
 KNOWN_KEYS = {
@@ -220,6 +221,22 @@ def load_serial_config(explicit):
     return ser if isinstance(ser, dict) else {}
 
 
+def _password_from_pairs(pairs):
+    """Return the value of a `password=...` pair, or None."""
+    for item in pairs:
+        key, sep, value = item.partition("=")
+        if sep and key == "password":
+            return value
+    return None
+
+
+def redact(text, secret):
+    """Mask occurrences of a secret (e.g. the Wi-Fi password) in a string."""
+    if secret and secret in text:
+        return text.replace(secret, PASSWORD_MASK)
+    return text
+
+
 # ---------------------------------------------------------------------------
 # Subcommands
 # ---------------------------------------------------------------------------
@@ -227,6 +244,8 @@ def load_serial_config(explicit):
 def cmd_get(ser, args):
     lines = send_command(ser, "get")
     data = parse_get(lines)
+    if "password" in data and data["password"]:
+        data["password"] = PASSWORD_MASK   # never print the real password
     if args.json:
         print(json.dumps(data, indent=2, ensure_ascii=False))
     else:
@@ -245,10 +264,11 @@ def cmd_set(ser, args):
         if "=" not in item:
             sys.exit("Invalid key=value pair: %s" % item)
         pairs.append(item)
+    secret = _password_from_pairs(pairs)
     command = "set " + " ".join(pairs)
     lines = send_command(ser, command)
     for line in lines:
-        print(line)
+        print(redact(line, secret))
 
 
 def cmd_save(ser, args):
@@ -298,14 +318,15 @@ def cmd_apply(ser, args):
 
     if not pairs:
         sys.exit("No configurable keys found in %s" % path)
+    secret = _password_from_pairs(pairs)
     print("Applying %d setting(s) from %s:" % (len(pairs), path))
     command = "set " + " ".join(pairs)
     for line in send_command(ser, command):
-        print(line)
+        print(redact(line, secret))
 
     if args.save:
         for line in send_command(ser, "save"):
-            print(line)
+            print(redact(line, secret))
     if args.reboot:
         cmd_reboot(ser, args)
 

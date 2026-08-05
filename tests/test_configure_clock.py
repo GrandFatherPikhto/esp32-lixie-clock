@@ -148,13 +148,15 @@ def test_cmd_get_plain(capsys):
     # cmd_get pads keys to a common width, so check the substrings separately.
     assert "ssid" in out and "MyWiFi" in out
     assert "brightness = 100" in out
+    assert "secret" not in out   # the password is masked
+    assert "******" in out
 
 
 def test_cmd_get_json(capsys):
     ser = FakeSerial({"get": _get_response()})
     cc.cmd_get(ser, _ns(json=True))
     data = json.loads(capsys.readouterr().out)
-    assert data == {"ssid": "MyWiFi", "password": "secret",
+    assert data == {"ssid": "MyWiFi", "password": "******",
                     "ntp_server": "pool.ntp.org", "brightness": "100"}
 
 
@@ -171,6 +173,35 @@ def test_cmd_set_invalid_pair_exits():
     with pytest.raises(SystemExit) as exc:
         cc.cmd_set(ser, _ns(kv=["no_equals_sign"]))
     assert "Invalid key=value pair" in str(exc.value)
+
+
+def test_cmd_set_masks_password(capsys):
+    command = "set ssid=MyWiFi password=DominusVobiscum"
+    resp = (command + "\r\n"
+            "set ssid = MyWiFi\r\n"
+            "set password = DominusVobiscum\r\n"
+            "use 'save' to persist\r\n").encode()
+    ser = FakeSerial({command: resp})
+    cc.cmd_set(ser, _ns(kv=["ssid=MyWiFi", "password=DominusVobiscum"]))
+    # The real password is still sent to the device...
+    assert ser.written[-1] == (command + "\r\n").encode()
+    # ...but never printed back.
+    out = capsys.readouterr().out
+    assert "DominusVobiscum" not in out
+    assert "******" in out
+
+
+def test_redact():
+    assert cc.redact("password=secret123", "secret123") == "password=******"
+    assert cc.redact("hello world", "secret") == "hello world"  # nothing to mask
+    assert cc.redact("x", None) == "x"                          # no secret known
+    assert cc.redact("x", "") == "x"
+
+
+def test_password_from_pairs():
+    assert cc._password_from_pairs(["ssid=x", "password=abc"]) == "abc"
+    assert cc._password_from_pairs(["ssid=x"]) is None
+    assert cc._password_from_pairs(["password="]) == ""
 
 
 def test_cmd_save(capsys):
@@ -230,6 +261,7 @@ def test_cmd_apply_builds_set_command(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "Applying 5 setting(s)" in out
     assert "unknown_key" in out  # the skip warning
+    assert "secret" not in out   # the password is masked in the output
     # Reserved keys are skipped silently (no "unknown key" warning for them).
     assert "skipping unknown key 'build'" not in out
     assert "skipping unknown key 'serial'" not in out
@@ -268,6 +300,21 @@ def test_load_serial_config_not_dict(tmp_path):
     p = tmp_path / "cfg.yaml"
     p.write_text("serial: just-a-string\n", encoding="utf-8")
     assert cc.load_serial_config(str(p)) == {}
+
+
+def test_cmd_apply_masks_password(tmp_path, capsys):
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text("ssid: MyWiFi\npassword: DominusVobiscum\n", encoding="utf-8")
+    command = "set ssid=MyWiFi password=DominusVobiscum"
+    resp = (command + "\r\n"
+            "set ssid = MyWiFi\r\n"
+            "set password = DominusVobiscum\r\n").encode()
+    ser = FakeSerial({command: resp})
+    cc.cmd_apply(ser, _ns(config=str(cfg)))
+    assert ser.written[-1] == (command + "\r\n").encode()
+    out = capsys.readouterr().out
+    assert "DominusVobiscum" not in out
+    assert "******" in out
 
 
 def test_cmd_apply_save_and_reboot(tmp_path, capsys):
