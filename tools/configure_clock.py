@@ -126,6 +126,29 @@ def send_command(ser, command, timeout=None):
     raise TimeoutError("Timed out waiting for a response to: %s" % command)
 
 
+def wait_for_prompt(ser, timeout=None):
+    """Wait until the device's console prompt appears.
+
+    Opening the serial port usually resets the ESP32 (USB auto-reset via
+    DTR/RTS), so the device is still booting when we connect. Sending a command
+    before the REPL is ready silently loses it in the boot output; wait for the
+    prompt instead. Returns True if the prompt was seen.
+    """
+    if timeout is None:
+        timeout = DEFAULT_TIMEOUT
+    buf = b""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        chunk = ser.read(256)
+        if chunk:
+            buf += chunk
+            if PROMPT in buf:
+                return True
+        else:
+            time.sleep(0.05)
+    return False
+
+
 def clean_output(raw):
     """Strip the echoed command and interleaved log lines."""
     text = raw.decode("utf-8", "replace")
@@ -338,7 +361,12 @@ def main():
 
     ser = serial.Serial(port, baud, timeout=1.0)
     try:
-        time.sleep(0.2)           # let the device settle
+        # Opening the port usually resets the ESP32 (USB auto-reset), so the
+        # device is still booting when we connect. Wait for the console prompt
+        # so the first command is not lost in the boot output.
+        if not wait_for_prompt(ser):
+            print("Warning: console prompt not detected within the timeout; "
+                  "the device may still be booting or the port is wrong.")
         handlers = {
             "get": cmd_get,
             "set": cmd_set,

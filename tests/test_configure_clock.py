@@ -113,6 +113,30 @@ def test_send_command_times_out_when_no_response(monkeypatch):
         cc.send_command(ser, "get")
 
 
+def test_wait_for_prompt_detects_prompt():
+    class Stub:
+        def read(self, size=256):
+            return b"wifi init logs...\r\nclock> "
+
+    assert cc.wait_for_prompt(Stub()) is True
+
+
+def test_wait_for_prompt_times_out(monkeypatch):
+    class Stub:
+        def read(self, size=256):
+            return b""
+
+    state = {"t": 0.0}
+
+    def fake_time():
+        state["t"] += 1.0
+        return state["t"]
+
+    monkeypatch.setattr(cc.time, "time", fake_time)
+    monkeypatch.setattr(cc.time, "sleep", lambda _s: None)
+    assert cc.wait_for_prompt(Stub()) is False
+
+
 # ---------------------------------------------------------------------------
 # Subcommands
 # ---------------------------------------------------------------------------
