@@ -87,6 +87,24 @@ menu "Clock Configuration"
             Default hue used in fixed color mode. Can be changed at runtime via
             the serial console (set hue=<0..359>).
 
+    config HUE_SHIFT_DEFAULT
+        int "Default global hue shift (0-359)"
+        default 0
+        range 0 359
+        help
+            Base-hue offset applied to every palette. 0 keeps the current look.
+            Can be changed at runtime via the serial console
+            (set hue_shift=<0..359>).
+
+    config HUE_2_DEFAULT
+        int "Default secondary hue (0-359)"
+        default 200
+        range 0 359
+        help
+            Secondary hue used by Mono for alternate digits (two-tone) when it
+            differs from `hue`. Can be changed at runtime via the serial
+            console (set hue_2=<0..359>).
+
     config NIGHT_MODE_DEFAULT
         bool "Night mode enabled by default"
         default n

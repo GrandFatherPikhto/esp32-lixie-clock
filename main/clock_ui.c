@@ -65,31 +65,40 @@ static int active_digits(void)
  *
  * color_mode:
  *   0 = Garland (original) - pairs at red/green/blue, each rotating at its own pace
- *   1 = Mono          - all digits one fixed hue
+ *   1 = Mono          - one hue per digit; with hue_2 != hue, alternate digits
+ *                       use hue_2 (two-tone)
  *   2 = Triad         - fixed per-pair colours (hue, hue+120, hue+240)
  *   3 = Spectrum      - rainbow sweep: one hue shared by all pairs, slowly rotating
  *   4 = Prism         - one static colour per digit position
  *   5 = Chronos       - hue derived from the actual time value (h/m/s)
+ *
+ * hue_shift is a global base-hue offset added to every palette (0 = classic
+ * look); hue_2 is the secondary Mono colour for alternate digits.
  * ------------------------------------------------------------------------- */
 
 static uint16_t palette_hue(uint8_t mode, int position, int pair,
-                            int hour, int minute, int second, uint16_t fixed_hue)
+                            int hour, int minute, int second,
+                            uint16_t fixed_hue, uint16_t hue_shift,
+                            uint16_t hue_2)
 {
     switch (mode) {
     case 0: /* Garland */
-        return (uint16_t)(color_phase[pair] % 360);
-    case 1: /* Mono */
-        return fixed_hue;
+        return (uint16_t)((color_phase[pair] + hue_shift) % 360);
+    case 1: /* Mono - alternate digits get the secondary hue (two-tone) */
+        if (position % 2 == 1 && hue_2 != fixed_hue) {
+            return (uint16_t)((hue_2 + hue_shift) % 360);
+        }
+        return (uint16_t)((fixed_hue + hue_shift) % 360);
     case 2: /* Triad */
-        return (uint16_t)((fixed_hue + pair * 120) % 360);
+        return (uint16_t)((fixed_hue + pair * 120 + hue_shift) % 360);
     case 3: /* Spectrum */
-        return (uint16_t)(color_phase[0] % 360);
+        return (uint16_t)((color_phase[0] + hue_shift) % 360);
     case 4: /* Prism */
-        return (uint16_t)((position * PRISM_HUE_STEP) % 360);
+        return (uint16_t)((position * PRISM_HUE_STEP + hue_shift) % 360);
     default: /* 5 = Chronos */
-        if (pair == 0) return (uint16_t)((hour % 24) * 15);
-        if (pair == 1) return (uint16_t)((minute % 60) * 6);
-        return (uint16_t)((second % 60) * 6);
+        if (pair == 0) return (uint16_t)(((hour % 24) * 15 + hue_shift) % 360);
+        if (pair == 1) return (uint16_t)(((minute % 60) * 6 + hue_shift) % 360);
+        return (uint16_t)(((second % 60) * 6 + hue_shift) % 360);
     }
 }
 
@@ -236,6 +245,8 @@ void clock_ui_frame(uint8_t *pixels, bool time_synced)
 
     const uint8_t  color_mode = app_config_get_color_mode();
     const uint16_t fixed_hue  = app_config_get_hue();
+    const uint16_t hue_shift  = app_config_get_hue_shift();
+    const uint16_t hue_2      = app_config_get_hue_2();
 
     /* Night mode: dim to night_low_brightness when enabled and the local hour
      * falls inside the configured night window. Only meaningful once the time
@@ -260,7 +271,8 @@ void clock_ui_frame(uint8_t *pixels, bool time_synced)
             hue = (uint16_t)((slot_step * 36) % 360);
         } else {
             target_digit = core_display_digit_value(pos, hour, minute, second);
-            hue = palette_hue(color_mode, pos, pair, hour, minute, second, fixed_hue);
+            hue = palette_hue(color_mode, pos, pair, hour, minute, second,
+                              fixed_hue, hue_shift, hue_2);
         }
 
         /* Cross-fade: start (or restart) a transition when the target digit

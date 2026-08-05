@@ -79,6 +79,8 @@ Requires `pyserial` and `pyyaml` (`pip install -r tools/requirements.txt`; or us
 | `gpio` | LED strip GPIO *(applies after reboot)* | `14` |
 | `color_mode` | Palette 0..5: 0 Garland, 1 Mono, 2 Triad, 3 Spectrum, 4 Prism, 5 Chronos | `0` |
 | `hue` | Base hue 0..359 (Mono: all digits; Triad: first pair) | `200` |
+| `hue_shift` | Global base-hue offset 0..359 (rotates every palette; 0 = classic) | `0` |
+| `hue_2` | Secondary hue 0..359 for Mono two-tone (alternate digits when != `hue`) | `200` |
 | `sync_method` | `0` = immediate, `1` = smooth (adjtime) | `0` |
 | `breathing` | `0` = off, `1` = pulsing brightness (any palette) | `0` |
 | `night_mode` | `0` = off, `1` = automatic night dimming | `0` |

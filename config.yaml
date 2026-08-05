@@ -45,6 +45,8 @@ brightness: 100              # LED brightness in percent (0 .. 100)
 gpio: 14                     # WS2812 data GPIO (0 .. 39); applies after reboot
 color_mode: 0                # colour palette, 0..5 (see "Palettes" below)
 hue: 200                     # base hue 0..359 (used by Mono and Triad)
+hue_shift: 0                 # global base-hue offset 0..359 (0 = classic look)
+hue_2: 200                   # secondary hue 0..359 (Mono two-tone when != hue)
 breathing: false             # pulse the brightness (combines with any palette)
 night_mode: false            # master switch for automatic night dimming (0/1 or true/false)
 night_low_brightness: 5      # brightness in percent used during night hours (0..100)

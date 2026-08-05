@@ -110,6 +110,18 @@ int core_config_set_value(clock_config_t *cfg, const char *key,
             return CORE_CFG_ERR_INVALID;
         }
         cfg->hue = (uint16_t)v;
+    } else if (strcmp(key, "hue_shift") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_HUE_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->hue_shift = (uint16_t)v;
+    } else if (strcmp(key, "hue_2") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_HUE_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->hue_2 = (uint16_t)v;
     } else if (strcmp(key, "sync_method") == 0) {
         if (core_config_parse_int(value, &v) != 0 || (v != 0 && v != 1)) {
             return CORE_CFG_ERR_INVALID;

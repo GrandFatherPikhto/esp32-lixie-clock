@@ -78,6 +78,10 @@ static void test_set_numeric_keys(void)
     TEST_ASSERT_EQUAL_UINT8(1, c.color_mode);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue", "200", 6));
     TEST_ASSERT_EQUAL_UINT16(200, c.hue);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_shift", "30", 6));
+    TEST_ASSERT_EQUAL_UINT16(30, c.hue_shift);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_2", "180", 6));
+    TEST_ASSERT_EQUAL_UINT16(180, c.hue_2);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "sync_method", "1", 6));
     TEST_ASSERT_EQUAL_UINT8(1, c.sync_method);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));
@@ -110,6 +114,10 @@ static void test_range_validation(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "sync_method", "3", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "breathing", "2", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue", "360", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue_shift", "360", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue_shift", "-1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue_2", "360", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue_2", "abc", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "gpio", "40", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "digits", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "digits", "7", 6));
@@ -143,6 +151,10 @@ static void test_range_boundaries_ok(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "brightness", "100", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue", "359", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_shift", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_shift", "359", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_2", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue_2", "359", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "color_mode", "5", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));

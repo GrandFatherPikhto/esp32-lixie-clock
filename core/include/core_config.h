@@ -53,6 +53,8 @@ typedef struct {
     int8_t   gpio;
     uint8_t  color_mode;    /* 0..CORE_CFG_COLOR_MODE_MAX (see header) */
     uint16_t hue;           /* 0..359 */
+    uint16_t hue_shift;     /* 0..359, global palette base-hue offset */
+    uint16_t hue_2;         /* 0..359, secondary hue (Mono two-tone) */
     uint8_t  sync_method;   /* 0=immediate, 1=smooth */
     uint8_t  breathing;     /* 0=off, 1=pulsing brightness */
     uint8_t  night_mode;            /* 0=off, 1=night dimming enabled */

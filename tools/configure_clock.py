@@ -73,7 +73,8 @@ PASSWORD_MASK = "******"   # replaces the Wi-Fi password in any console output
 KNOWN_KEYS = {
     "ntp_server", "sync_interval", "tz_offset",
     "ssid", "password",
-    "brightness", "digits", "gpio", "color_mode", "hue", "sync_method",
+    "brightness", "digits", "gpio", "color_mode", "hue", "hue_shift", "hue_2",
+    "sync_method",
     "breathing",
     "night_mode", "night_low_brightness", "night_start", "night_end",
     "cross_fade", "slot_machine_interval",

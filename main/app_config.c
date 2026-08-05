@@ -33,6 +33,8 @@ static void set_defaults(void)
     cfg.gpio              = CONFIG_LED_GPIO;
     cfg.color_mode        = CONFIG_COLOR_MODE_DEFAULT;
     cfg.hue               = CONFIG_COLOR_HUE_DEFAULT;
+    cfg.hue_shift         = CONFIG_HUE_SHIFT_DEFAULT;
+    cfg.hue_2             = CONFIG_HUE_2_DEFAULT;
     cfg.breathing         = 0;   /* breathing is off by default */
 #ifdef CONFIG_NIGHT_MODE_DEFAULT
     cfg.night_mode        = 1;   /* night dimming on by default */
@@ -143,6 +145,8 @@ void app_config_dump(void)
     printf("gpio            = %d\n", cfg.gpio);
     printf("color_mode      = %u\n", cfg.color_mode);
     printf("hue             = %u\n", cfg.hue);
+    printf("hue_shift       = %u\n", cfg.hue_shift);
+    printf("hue_2           = %u\n", cfg.hue_2);
     printf("sync_method     = %u\n", cfg.sync_method);
     printf("breathing       = %u\n", cfg.breathing);
     printf("night_mode        = %u\n", cfg.night_mode);
@@ -167,6 +171,8 @@ uint8_t     app_config_get_digits(void)      { return cfg.digits; }
 int8_t      app_config_get_gpio(void)        { return cfg.gpio; }
 uint8_t     app_config_get_color_mode(void)  { return cfg.color_mode; }
 uint16_t    app_config_get_hue(void)         { return cfg.hue; }
+uint16_t    app_config_get_hue_shift(void)   { return cfg.hue_shift; }
+uint16_t    app_config_get_hue_2(void)       { return cfg.hue_2; }
 uint8_t     app_config_get_sync_method(void) { return cfg.sync_method; }
 uint8_t     app_config_get_breathing(void)   { return cfg.breathing; }
 uint8_t     app_config_get_night_mode(void)            { return cfg.night_mode; }
