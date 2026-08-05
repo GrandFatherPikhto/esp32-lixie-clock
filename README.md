@@ -207,6 +207,17 @@ Then run the tools as `python tools/configure_clock.py ...` and `python tools/bu
 
 `pytest` is declared in [`tools/requirements.txt`](tools/requirements.txt) — install it with `pip install -r tools/requirements.txt` if it isn't present.
 
+### 🛠️ Host C unit tests (Tier 2 — core logic, no board, needs Linux/WSL)
+
+The pure firmware logic lives in [`core/`](core/) (config parsing/validation, time-zone math, digit rendering) with **no ESP-IDF dependencies**, so it can be unit-tested natively on a Linux host with Unity. Run from WSL2:
+
+```bash
+. /home/grand/esp/esp-idf-v6.0/export.sh     # or your IDF
+tests/c/run_tests.sh
+```
+
+The script compiles `core/src/*.c` + Unity (from `$IDF_PATH`) + [`tests/c/test_core.c`](tests/c/test_core.c) into `build_host/` and runs it — 14 tests, 0 failures. These exercise the exact functions the firmware uses (`core_config_set_value`, `core_time_format_tz`, `core_display_set_digit`, ...).
+
 The firmware is chip-agnostic — only the LED GPIO needs to match your board's wiring.
 
 ---

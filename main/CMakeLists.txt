@@ -8,6 +8,9 @@ idf_component_register(
         "app_config.c"
         "wifi_manager.c"
         "config_console.c"
+        "../core/src/core_config.c"
+        "../core/src/core_time.c"
+        "../core/src/core_display.c"
     PRIV_REQUIRES
         spi_flash
         nvs_flash
@@ -17,4 +20,5 @@ idf_component_register(
         esp_netif
         console
     INCLUDE_DIRS
-        "./include/")
+        "./include/"
+        "../core/include")

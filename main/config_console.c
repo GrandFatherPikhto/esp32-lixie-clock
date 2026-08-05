@@ -5,6 +5,7 @@
 #include "esp_check.h"
 #include "esp_console.h"
 #include "app_config.h"
+#include "core_config.h"
 #include "wifi_manager.h"
 #include "sync_time.h"
 #include "config_console.h"
@@ -29,15 +30,13 @@ static int cmd_set(int argc, char **argv)
     }
     int failed = 0;
     for (int i = 1; i < argc; i++) {
-        char *eq = strchr(argv[i], '=');
-        if (eq == NULL || eq == argv[i]) {
+        char key[64];
+        char val[64];
+        if (core_config_split_kv(argv[i], key, sizeof(key), val, sizeof(val)) != 0) {
             printf("bad argument: %s (expected key=value)\n", argv[i]);
             failed = 1;
             continue;
         }
-        *eq = '\0';
-        const char *key = argv[i];
-        const char *val = eq + 1;
         esp_err_t err = app_config_set(key, val);
         if (err == ESP_OK) {
             printf("set %s = %s\n", key, val);

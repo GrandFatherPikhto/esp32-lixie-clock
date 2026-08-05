@@ -4,29 +4,18 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "app_config.h"
+#include "core_config.h"
+#include "core_time.h"
 
 static const char *TAG = "app_config";
 
 #define NVS_NAMESPACE "clock"
 #define NVS_KEY       "cfg"
 
-/* Persistent configuration blob (kept compact and stable) */
-typedef struct {
-    char     ntp_server[64];
-    char     ssid[32];
-    char     password[64];
-    uint32_t sync_interval_sec;
-    int32_t  tz_offset_min;
-    uint8_t  brightness;    /* 0..100 */
-    uint8_t  digits;        /* 1..CLOCK_DIGITS_MAX */
-    int8_t   gpio;
-    uint8_t  color_mode;    /* 0=rotate, 1=fixed */
-    uint16_t hue;           /* 0..359 */
-    uint8_t  sync_method;   /* 0=immediate, 1=smooth */
-    uint8_t  _pad[3];
-} app_config_t;
-
-static app_config_t cfg;
+/* Runtime configuration snapshot. The pure key=value parsing/validation lives
+ * in core/ (core_config) so it can be unit-tested on the host without ESP-IDF;
+ * this static instance is the NVS-backed blob used by the firmware. */
+static clock_config_t cfg;
 
 /* ---------------------------------------------------------------------------
  * Defaults (seeded from Kconfig)
@@ -35,7 +24,8 @@ static app_config_t cfg;
 static void set_defaults(void)
 {
     memset(&cfg, 0, sizeof(cfg));
-    strlcpy(cfg.ntp_server, CONFIG_SNTP_TIME_SERVER, sizeof(cfg.ntp_server));
+    core_config_copy_str(cfg.ntp_server, sizeof(cfg.ntp_server),
+                         CONFIG_SNTP_TIME_SERVER);
     cfg.sync_interval_sec = CONFIG_SNTP_SYNC_INTERVAL_PERIOD;
     cfg.tz_offset_min     = CONFIG_TIMEZONE_OFFSET_MINUTES;
     cfg.brightness        = CONFIG_CLOCK_BRIGHTNESS_DEFAULT;
@@ -76,19 +66,10 @@ void app_config_init(void)
 
 void app_config_apply_timezone(void)
 {
-    /* POSIX TZ encodes "local = UTC - offset", so the sign is inverted:
-     * UTC+3 (Moscow) becomes "UTC-3", UTC-5 becomes "UTC+5". */
+    /* POSIX TZ encodes "local = UTC - offset", so the sign is inverted;
+     * core_time_format_tz() performs the conversion (unit-tested in core). */
     char tz[40];
-    char sign = (cfg.tz_offset_min < 0) ? '+' : '-';
-    unsigned abs_min = (cfg.tz_offset_min < 0) ? (unsigned)(-cfg.tz_offset_min)
-                                               : (unsigned)cfg.tz_offset_min;
-    unsigned hh = abs_min / 60;
-    unsigned mm = abs_min % 60;
-    if (mm) {
-        snprintf(tz, sizeof(tz), "UTC%c%u:%02u", sign, hh, mm);
-    } else {
-        snprintf(tz, sizeof(tz), "UTC%c%u", sign, hh);
-    }
+    core_time_format_tz(cfg.tz_offset_min, tz, sizeof(tz));
     setenv("TZ", tz, 1);
     tzset();
     ESP_LOGI(TAG, "Timezone applied: %s (offset %ld min)", tz, (long)cfg.tz_offset_min);
@@ -99,48 +80,13 @@ esp_err_t app_config_set(const char *key, const char *value)
     if (key == NULL || value == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
-
-    long v;
-    if (strcmp(key, "ntp_server") == 0) {
-        strlcpy(cfg.ntp_server, value, sizeof(cfg.ntp_server));
-    } else if (strcmp(key, "ssid") == 0) {
-        strlcpy(cfg.ssid, value, sizeof(cfg.ssid));
-    } else if (strcmp(key, "password") == 0) {
-        strlcpy(cfg.password, value, sizeof(cfg.password));
-    } else if (strcmp(key, "sync_interval") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < 30 || v > 604800) return ESP_ERR_INVALID_ARG;
-        cfg.sync_interval_sec = (uint32_t)v;
-    } else if (strcmp(key, "tz_offset") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < -840 || v > 840) return ESP_ERR_INVALID_ARG;
-        cfg.tz_offset_min = (int32_t)v;
-    } else if (strcmp(key, "brightness") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < 0 || v > 100) return ESP_ERR_INVALID_ARG;
-        cfg.brightness = (uint8_t)v;
-    } else if (strcmp(key, "digits") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < 1 || v > CLOCK_DIGITS_MAX) return ESP_ERR_INVALID_ARG;
-        cfg.digits = (uint8_t)v;
-    } else if (strcmp(key, "gpio") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < 0 || v > 39) return ESP_ERR_INVALID_ARG;
-        cfg.gpio = (int8_t)v;
-    } else if (strcmp(key, "color_mode") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v != 0 && v != 1) return ESP_ERR_INVALID_ARG;
-        cfg.color_mode = (uint8_t)v;
-    } else if (strcmp(key, "hue") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v < 0 || v > 359) return ESP_ERR_INVALID_ARG;
-        cfg.hue = (uint16_t)v;
-    } else if (strcmp(key, "sync_method") == 0) {
-        v = strtol(value, NULL, 10);
-        if (v != 0 && v != 1) return ESP_ERR_INVALID_ARG;
-        cfg.sync_method = (uint8_t)v;
-    } else {
+    /* All parsing / range-checking lives in the host-testable core library. */
+    int rc = core_config_set_value(&cfg, key, value, CLOCK_DIGITS_MAX);
+    if (rc == CORE_CFG_ERR_UNKNOWN) {
         return ESP_ERR_NOT_FOUND;
+    }
+    if (rc == CORE_CFG_ERR_INVALID) {
+        return ESP_ERR_INVALID_ARG;
     }
     return ESP_OK;
 }

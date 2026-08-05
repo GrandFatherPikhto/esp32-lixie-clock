@@ -207,6 +207,17 @@ pip install -r tools/requirements.txt
 
 `pytest` объявлен в [`tools/requirements.txt`](tools/requirements.txt) — при необходимости установите через `pip install -r tools/requirements.txt`.
 
+### 🛠️ Host C unit-тесты (Уровень 2 — чистая логика, без платы, нужен Linux/WSL)
+
+Чистая логика прошивки вынесена в [`core/`](core/) (разбор/валидация конфигурации, математика часового пояса, отрисовка цифр) **без зависимостей от ESP-IDF**, поэтому её можно тестировать нативно на Linux-хосте через Unity. Запуск из WSL2:
+
+```bash
+. /home/grand/esp/esp-idf-v6.0/export.sh     # или ваш IDF
+tests/c/run_tests.sh
+```
+
+Скрипт собирает `core/src/*.c` + Unity (из `$IDF_PATH`) + [`tests/c/test_core.c`](tests/c/test_core.c) в `build_host/` и запускает — 14 тестов, 0 ошибок. Покрываются именно те функции, которые использует прошивка (`core_config_set_value`, `core_time_format_tz`, `core_display_set_digit`, ...).
+
 Прошивка не привязана к конкретному чипу — достаточно, чтобы пин ленты соответствовал вашей разводке.
 
 ---
