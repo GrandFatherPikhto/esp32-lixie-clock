@@ -1,5 +1,7 @@
 # ⏰ Lixie-style Edge-Lit Clock on ESP32
 
+![CI](https://github.com/GrandFatherPikhto/esp32-lixie-clock/actions/workflows/ci.yml/badge.svg)
+
 A digital clock with "pseudo-vacuum-tube" display based on WS2812 LED strips and edge-lit acrylic segments (Lixie-style). Powered by ESP32, it synchronizes time via NTP over Wi-Fi, and is written in C for ESP-IDF v5.x. All settings can be changed **at runtime over the board's USB port** — no re-flashing required.
 
 ---
@@ -233,6 +235,16 @@ OK
 ```
 
 These tests exercise the exact functions the firmware uses (`core_config_set_value`, `core_time_format_tz`, `core_display_set_digit`, ...).
+
+### 🤖 CI (GitHub Actions — Tier 3)
+
+The repo ships a GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) that runs on **every push / pull request** on Ubuntu (real Linux — no board or local setup needed):
+
+- **Python tools (Tier 1)** — `pytest` for `configure_clock.py` / `build_target.py` (36 tests).
+- **Host C unit tests (Tier 2)** — Unity tests for the `core/` logic (14 tests).
+- **Firmware builds (Tier 3)** — builds **all** supported targets in parallel: `esp32`, `esp32s2`, `esp32s3`, `esp32c3`, `esp32c6`, `esp32h2`.
+
+A green ✅ on a commit means everything passes; a red ❌ catches compile regressions for any chip, tool regressions, or core-logic bugs automatically. Just push and open the **Actions** tab on GitHub (enable Actions under *Settings → Actions* if the repo disallows them).
 
 The firmware is chip-agnostic — only the LED GPIO needs to match your board's wiring.
 
