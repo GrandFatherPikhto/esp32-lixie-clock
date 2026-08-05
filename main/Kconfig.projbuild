@@ -87,4 +87,37 @@ menu "Clock Configuration"
             Default hue used in fixed color mode. Can be changed at runtime via
             the serial console (set hue=<0..359>).
 
+    config NIGHT_MODE_DEFAULT
+        bool "Night mode enabled by default"
+        default n
+        help
+            Master switch for automatic night-time brightness reduction.
+            Can be changed at runtime via the serial console
+            (set night_mode=<0|1>).
+
+    config NIGHT_LOW_BRIGHTNESS_DEFAULT
+        int "Default night brightness (percent)"
+        default 5
+        range 0 100
+        help
+            Brightness used during night hours. Can be changed at runtime via
+            the serial console (set night_low_brightness=<0..100>).
+
+    config NIGHT_START_HOUR_DEFAULT
+        int "Night window start hour (default)"
+        default 23
+        range 0 23
+        help
+            Start hour of the night window (inclusive). Can be changed at
+            runtime via the serial console (set night_start=<0..23>).
+
+    config NIGHT_END_HOUR_DEFAULT
+        int "Night window end hour (default)"
+        default 7
+        range 0 23
+        help
+            End hour of the night window (exclusive; wraps across midnight).
+            Can be changed at runtime via the serial console
+            (set night_end=<0..23>).
+
 endmenu

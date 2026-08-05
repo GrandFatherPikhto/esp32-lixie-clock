@@ -81,6 +81,10 @@ Requires `pyserial` and `pyyaml` (`pip install -r tools/requirements.txt`; or us
 | `hue` | Base hue 0..359 (Mono: all digits; Triad: first pair) | `200` |
 | `sync_method` | `0` = immediate, `1` = smooth (adjtime) | `0` |
 | `breathing` | `0` = off, `1` = pulsing brightness (any palette) | `0` |
+| `night_mode` | `0` = off, `1` = automatic night dimming | `0` |
+| `night_low_brightness` | Brightness during night hours, percent (0..100) | `5` |
+| `night_start` | Night window start hour (0..23, inclusive) | `23` |
+| `night_end` | Night window end hour (0..23, exclusive) | `7` |
 
 Console commands: `get`, `set`, `save`, `reset`, `reboot`, `status`, `help`.
 

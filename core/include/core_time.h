@@ -26,6 +26,18 @@ void core_time_format_tz(int32_t offset_min, char *buf, size_t len);
 int core_time_utc_to_hms(int64_t utc_seconds, int32_t tz_offset_min,
                          int *hour, int *minute, int *second);
 
+/**
+ * @brief Check whether an hour of day falls inside a [start, end) night window.
+ *
+ * Wraps across midnight when start > end (e.g. 23-07 covers 23:00..06:59).
+ * When start == end the window is empty and the function returns 0.
+ * @param hour  0..23, the local hour to test.
+ * @param start 0..23, night window start hour.
+ * @param end   0..23, night window end hour (exclusive).
+ * @return 1 if hour is inside the window, 0 otherwise.
+ */
+int core_time_is_night_hour(int hour, int start, int end);
+
 #ifdef __cplusplus
 }
 #endif

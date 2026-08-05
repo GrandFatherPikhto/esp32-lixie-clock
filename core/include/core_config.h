@@ -23,6 +23,10 @@ extern "C" {
 #define CORE_CFG_HUE_MAX              359
 /* color_mode: 0=Garland(orig), 1=Mono, 2=Triad, 3=Spectrum, 4=Prism, 5=Chronos */
 #define CORE_CFG_COLOR_MODE_MAX       5
+/* Night mode: master switch + window/brightness ranges. */
+#define CORE_CFG_NIGHT_MODE_MAX           1
+#define CORE_CFG_NIGHT_BRIGHTNESS_MAX     100
+#define CORE_CFG_NIGHT_HOUR_MAX           23
 
 /* Return codes for core_config_set_value(). */
 #define CORE_CFG_OK             0
@@ -47,6 +51,10 @@ typedef struct {
     uint16_t hue;           /* 0..359 */
     uint8_t  sync_method;   /* 0=immediate, 1=smooth */
     uint8_t  breathing;     /* 0=off, 1=pulsing brightness */
+    uint8_t  night_mode;            /* 0=off, 1=night dimming enabled */
+    uint8_t  night_low_brightness;  /* 0..100, brightness used during night hours */
+    uint8_t  night_start;           /* 0..23, night window start hour */
+    uint8_t  night_end;             /* 0..23, night window end hour (exclusive) */
 } clock_config_t;
 
 /**

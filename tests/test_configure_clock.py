@@ -6,6 +6,7 @@ stub and the YAML config is supplied via temp files.
 
 import argparse
 import json
+from pathlib import Path
 
 import pytest
 
@@ -37,7 +38,7 @@ def _get_response():
 def test_default_config_path_points_at_project_root():
     path = cc.default_config_path()
     assert path.name == "config.yaml"
-    assert path.parent.name == "clock"  # the project root directory
+    assert path.parent == Path(cc.__file__).resolve().parent.parent  # the project root directory
     # The real project config.yaml should exist and resolve.
     assert cc.resolve_config_path(None) == path
 

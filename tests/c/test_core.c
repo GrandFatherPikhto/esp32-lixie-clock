@@ -82,6 +82,14 @@ static void test_set_numeric_keys(void)
     TEST_ASSERT_EQUAL_UINT8(1, c.sync_method);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));
     TEST_ASSERT_EQUAL_UINT8(1, c.breathing);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_mode", "1", 6));
+    TEST_ASSERT_EQUAL_UINT8(1, c.night_mode);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_low_brightness", "5", 6));
+    TEST_ASSERT_EQUAL_UINT8(5, c.night_low_brightness);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_start", "23", 6));
+    TEST_ASSERT_EQUAL_UINT8(23, c.night_start);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_end", "7", 6));
+    TEST_ASSERT_EQUAL_UINT8(7, c.night_end);
 }
 
 static void test_range_validation(void)
@@ -103,6 +111,14 @@ static void test_range_validation(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "digits", "7", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "digits", "abc", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "sync_interval", "1e3", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_mode", "2", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_mode", "-1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_low_brightness", "101", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_low_brightness", "-1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_start", "24", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_start", "-1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_end", "24", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "night_end", "abc", 6));
 }
 
 static void test_range_boundaries_ok(void)
@@ -121,6 +137,14 @@ static void test_range_boundaries_ok(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "color_mode", "5", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_mode", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_mode", "1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_low_brightness", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_low_brightness", "100", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_start", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_start", "23", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_end", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "night_end", "23", 6));
 }
 
 static void test_unknown_key_and_null(void)
@@ -194,6 +218,31 @@ static void test_utc_to_hms(void)
     TEST_ASSERT_EQUAL_INT(56, s);
 
     TEST_ASSERT_EQUAL_INT(-1, core_time_utc_to_hms(0, 0, NULL, &m, &s));
+}
+
+static void test_is_night_hour(void)
+{
+    /* Non-wrapping window 7..23: night is 07:00..22:59 */
+    TEST_ASSERT_EQUAL_INT(1, core_time_is_night_hour(7, 7, 23));
+    TEST_ASSERT_EQUAL_INT(1, core_time_is_night_hour(22, 7, 23));
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(23, 7, 23));   /* end exclusive */
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(6, 7, 23));
+
+    /* Wrapping window 23..7: night is 23:00..06:59 */
+    TEST_ASSERT_EQUAL_INT(1, core_time_is_night_hour(23, 23, 7));
+    TEST_ASSERT_EQUAL_INT(1, core_time_is_night_hour(0, 23, 7));
+    TEST_ASSERT_EQUAL_INT(1, core_time_is_night_hour(6, 23, 7));
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(7, 23, 7));    /* end exclusive */
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(12, 23, 7));
+
+    /* start == end -> empty window */
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(10, 10, 10));
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(23, 23, 23));
+
+    /* Out-of-range inputs -> 0 */
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(24, 7, 23));
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(-1, 7, 23));
+    TEST_ASSERT_EQUAL_INT(0, core_time_is_night_hour(3, 24, 7));
 }
 
 /* ---------------------------- core_display ------------------------------ */
@@ -290,6 +339,7 @@ int main(void)
     RUN_TEST(test_split_kv);
     RUN_TEST(test_format_tz);
     RUN_TEST(test_utc_to_hms);
+    RUN_TEST(test_is_night_hour);
     RUN_TEST(test_digit_value);
     RUN_TEST(test_set_digit_grb_and_brightness);
     RUN_TEST(test_set_digit_bounds);

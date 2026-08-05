@@ -66,6 +66,10 @@ uint8_t     app_config_get_color_mode(void);    /* 0..5 (Garland/Mono/Triad/Spec
 uint16_t    app_config_get_hue(void);           /* 0..359                  */
 uint8_t     app_config_get_sync_method(void);   /* 0=immediate, 1=smooth   */
 uint8_t     app_config_get_breathing(void);     /* 0=off, 1=pulsing        */
+uint8_t     app_config_get_night_mode(void);            /* 0=off, 1=night dimming */
+uint8_t     app_config_get_night_low_brightness(void);  /* 0..100 percent */
+uint8_t     app_config_get_night_start(void);           /* 0..23 hour */
+uint8_t     app_config_get_night_end(void);             /* 0..23 hour (exclusive) */
 
 #ifdef __cplusplus
 }

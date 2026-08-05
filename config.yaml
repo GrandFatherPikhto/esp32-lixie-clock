@@ -46,6 +46,10 @@ gpio: 14                     # WS2812 data GPIO (0 .. 39); applies after reboot
 color_mode: 0                # colour palette, 0..5 (see "Palettes" below)
 hue: 200                     # base hue 0..359 (used by Mono and Triad)
 breathing: false             # pulse the brightness (combines with any palette)
+night_mode: false            # master switch for automatic night dimming (0/1 or true/false)
+night_low_brightness: 5      # brightness in percent used during night hours (0..100)
+night_start: 23              # night window start hour (0..23, inclusive)
+night_end: 7                 # night window end hour (0..23, exclusive; wraps midnight)
 
 # ---------------------------------------------------------------------------
 # Palettes (color_mode) - switch anytime with: set color_mode=<N>

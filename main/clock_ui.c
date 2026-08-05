@@ -108,7 +108,16 @@ void clock_ui_fill_time(uint8_t *pixels)
 
     const uint8_t  color_mode  = app_config_get_color_mode();
     const uint16_t fixed_hue   = app_config_get_hue();
-    const uint8_t  brightness  = effective_brightness(app_config_get_brightness());
+    /* Night mode: dim to night_low_brightness when enabled and the local hour
+     * falls inside the configured night window. Only meaningful once the time
+     * is known, so it is applied here (time path), not in the boot animation. */
+    uint8_t base_brightness = app_config_get_brightness();
+    if (app_config_get_night_mode() &&
+        core_time_is_night_hour(hour, app_config_get_night_start(),
+                                app_config_get_night_end())) {
+        base_brightness = app_config_get_night_low_brightness();
+    }
+    const uint8_t brightness = effective_brightness(base_brightness);
 
     for (int i = 0; i < digits_active; i++) {
         uint8_t d = core_display_digit_value(i, hour, minute, second);

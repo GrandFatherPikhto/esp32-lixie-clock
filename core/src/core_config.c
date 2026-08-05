@@ -120,6 +120,29 @@ int core_config_set_value(clock_config_t *cfg, const char *key,
             return CORE_CFG_ERR_INVALID;
         }
         cfg->breathing = (uint8_t)v;
+    } else if (strcmp(key, "night_mode") == 0) {
+        if (core_config_parse_int(value, &v) != 0 || (v != 0 && v != 1)) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->night_mode = (uint8_t)v;
+    } else if (strcmp(key, "night_low_brightness") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_NIGHT_BRIGHTNESS_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->night_low_brightness = (uint8_t)v;
+    } else if (strcmp(key, "night_start") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_NIGHT_HOUR_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->night_start = (uint8_t)v;
+    } else if (strcmp(key, "night_end") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_NIGHT_HOUR_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->night_end = (uint8_t)v;
     } else {
         return CORE_CFG_ERR_UNKNOWN;
     }

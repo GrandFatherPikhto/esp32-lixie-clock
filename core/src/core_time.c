@@ -37,3 +37,16 @@ int core_time_utc_to_hms(int64_t utc_seconds, int32_t tz_offset_min,
     *second = (int)(day % 60);
     return 0;
 }
+
+int core_time_is_night_hour(int hour, int start, int end)
+{
+    if (hour < 0 || hour > 23 || start < 0 || start > 23 ||
+        end < 0 || end > 23 || start == end) {
+        return 0;
+    }
+    if (start < end) {
+        return (hour >= start && hour < end);
+    }
+    /* Window wraps across midnight (e.g. 23..07). */
+    return (hour >= start || hour < end);
+}
