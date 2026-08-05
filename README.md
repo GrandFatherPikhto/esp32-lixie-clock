@@ -2,7 +2,7 @@
 
 ![CI](https://github.com/GrandFatherPikhto/esp32-lixie-clock/actions/workflows/ci.yml/badge.svg)
 
-A digital clock with "pseudo-vacuum-tube" display based on WS2812 LED strips and edge-lit acrylic segments (Lixie-style). Powered by ESP32, it synchronizes time via NTP over Wi-Fi, and is written in C for ESP-IDF v5.x. All settings can be changed **at runtime over the board's USB port** — no re-flashing required.
+A digital clock with "pseudo-vacuum-tube" display based on WS2812 LED strips and edge-lit acrylic segments (Lixie-style). Powered by ESP32, it synchronizes time via NTP over Wi-Fi, and is written in C for ESP-IDF v6.x. All settings can be changed **at runtime over the board's USB port** — no re-flashing required.
 
 ---
 
@@ -10,7 +10,7 @@ A digital clock with "pseudo-vacuum-tube" display based on WS2812 LED strips and
 
 - Displays time (hours:minutes:seconds) on **6 digits** (runtime-configurable).
 - Each digit uses **10 LEDs** (0–9) – only the required digit lights up per position.
-- Smooth colour cycling for each pair of digits (hours, minutes, seconds) using HSV rotation (or a fixed colour).
+- **6 colour palettes** (`color_mode` 0–5): Garland (original per-pair rotation), Mono (one fixed hue), Triad (fixed per-pair colours), Spectrum (rainbow sweep), Prism (static colour per digit), Chronos (colour encodes the time) — plus an optional **breathing** brightness pulse.
 - **Boot animation** (digits 0–9 chase) shown until the first successful time sync.
 - Automatic time synchronisation via **NTP** with a runtime-configurable interval.
 - **Runtime configuration over USB**: NTP server, sync interval, timezone, Wi-Fi SSID/password, brightness, digit count, LED GPIO, colour mode — all changeable from a PC via the `configure_clock.py` tool, persisted to NVS.
@@ -77,9 +77,10 @@ Requires `pyserial` and `pyyaml` (`pip install -r tools/requirements.txt`; or us
 | `brightness` | LED brightness, percent (0..100) | `100` |
 | `digits` | Number of digits to display (1..max) | `6` |
 | `gpio` | LED strip GPIO *(applies after reboot)* | `14` |
-| `color_mode` | `0` = rotate colours, `1` = fixed colour | `0` |
-| `hue` | Fixed hue 0..359 (used when `color_mode=1`) | `200` |
+| `color_mode` | Palette 0..5: 0 Garland, 1 Mono, 2 Triad, 3 Spectrum, 4 Prism, 5 Chronos | `0` |
+| `hue` | Base hue 0..359 (Mono: all digits; Triad: first pair) | `200` |
 | `sync_method` | `0` = immediate, `1` = smooth (adjtime) | `0` |
+| `breathing` | `0` = off, `1` = pulsing brightness (any palette) | `0` |
 
 Console commands: `get`, `set`, `save`, `reset`, `reboot`, `status`, `help`.
 
@@ -154,7 +155,7 @@ If synchronisation fails, check:
 
 ## 🛠️ Build and Flash
 
-1. Install ESP-IDF (recommended v5.3 or v5.5.3).
+1. Install ESP-IDF (recommended **v6.0.2**; the code also builds on v5.3).
 2. Clone or copy the project files into a folder.
 3. Open a terminal and activate the IDF environment:
    ```bash
@@ -240,7 +241,7 @@ These tests exercise the exact functions the firmware uses (`core_config_set_val
 
 The repo ships a GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) that runs on **every push / pull request** on Ubuntu (real Linux — no board or local setup needed):
 
-- **Python tools (Tier 1)** — `pytest` for `configure_clock.py` / `build_target.py` (36 tests).
+- **Python tools (Tier 1)** — `pytest` for `configure_clock.py` / `build_target.py` (47 tests).
 - **Host C unit tests (Tier 2)** — Unity tests for the `core/` logic (14 tests).
 - **Firmware builds (Tier 3)** — builds **all** supported targets in parallel: `esp32`, `esp32s2`, `esp32s3`, `esp32c3`, `esp32c6`, `esp32h2`.
 
