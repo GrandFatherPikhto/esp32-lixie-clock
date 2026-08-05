@@ -1,15 +1,20 @@
 idf_component_register(
-    SRCS 
+    SRCS
         "main.c"
         "led_strip_encoder.c"
         "sntp_sync.c"
         "led_display.c"
         "clock_ui.c"
-    PRIV_REQUIRES 
+        "app_config.c"
+        "wifi_manager.c"
+        "config_console.c"
+    PRIV_REQUIRES
         spi_flash
         nvs_flash
         esp_driver_rmt
-        esp_event 
+        esp_event
         esp_wifi
-    INCLUDE_DIRS 
+        esp_netif
+        console
+    INCLUDE_DIRS
         "./include/")

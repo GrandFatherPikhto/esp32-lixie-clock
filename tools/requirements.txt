@@ -1,0 +1,4 @@
+# Python dependencies for the helper tools in this directory.
+# Install with:  pip install -r tools/requirements.txt
+pyserial>=3.5
+pyyaml>=6.0

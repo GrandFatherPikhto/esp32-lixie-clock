@@ -8,26 +8,22 @@ extern "C" {
 #endif
 
 /**
- * @brief Буфер пикселей (порядок GRB, размер = CLOCK_LED_NUMBERS * 3)
- * Доступен для чтения извне, чтобы отправлять через led_display_send()
- */
-extern uint8_t led_strip_pixels[];
-
-/**
- * @brief Инициализация модуля: установка часового пояса, сброс состояния
+ * @brief Initialize the UI module: apply the configured timezone, reset
+ * animation/color state.
  */
 void clock_ui_init(void);
 
 /**
- * @brief Заполнить буфер пикселей для отображения текущего времени
- * @note Использует системное время (time(), localtime_r)
+ * @brief Render the current time into @p pixels (GRB, CLOCK_LED_NUMBERS_MAX*3
+ * bytes). Uses the runtime digit count, brightness and color settings.
  */
-void clock_ui_fill_time(void);
+void clock_ui_fill_time(uint8_t *pixels);
 
 /**
- * @brief Заполнить буфер пикселей для анимации загрузки (бегущие цифры 0-9 с изменением цвета)
+ * @brief Render the boot animation (digits 0-9 chase with rotating color) into
+ * @p pixels, honoring the runtime digit count and brightness.
  */
-void clock_ui_fill_animation(void);
+void clock_ui_fill_animation(uint8_t *pixels);
 
 #ifdef __cplusplus
 }

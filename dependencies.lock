@@ -2,15 +2,9 @@ dependencies:
   idf:
     source:
       type: idf
-    version: 5.5.3
-  protocol_examples_common:
-    dependencies: []
-    source:
-      path: C:\esp\v5.5.3\esp-idf\examples\common_components\protocol_examples_common
-      type: local
-    version: '*'
+    version: 5.3.4
 direct_dependencies:
-- protocol_examples_common
-manifest_hash: 9a9520c926aa0a3e6ab6efa4fb14c3591e654d3887543776c1f730f359b02661
+- idf
+manifest_hash: 8028f5a3af478070ea133ddcfcf6082b8591e09885325e7be01ce9027a8efc40
 target: esp32
 version: 2.0.0

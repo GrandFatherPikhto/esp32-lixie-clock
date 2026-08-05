@@ -1,0 +1,41 @@
+# ============================================================================
+# Clock firmware configuration
+#
+# This single YAML file drives the Python helper scripts:
+#   - tools/configure_clock.py  ->  provisions the device over USB
+#     (python tools/configure_clock.py apply [--save] [--reboot])
+#   - tools/build_target.py     ->  build defaults (the "build:" section)
+#
+# The top-level keys match the device-side `set` keys 1:1 (see
+# `python tools/configure_clock.py get` on a running device for current
+# values). All values are validated / range-checked on the device.
+#
+# NOTE: ssid / password are Wi-Fi credentials for the AP the clock connects
+# to. Store this file outside version control if you don't want to commit
+# your real network credentials.
+# ============================================================================
+
+# --- Wi-Fi -----------------------------------------------------------------
+ssid: "MyWiFi"
+password: "change-me"
+
+# --- Time / NTP ------------------------------------------------------------
+ntp_server: "pool.ntp.org"   # NTP hostname
+sync_interval: 3600          # NTP sync period in seconds (30 .. 604800)
+tz_offset: 180               # UTC offset in minutes (UTC+3 Moscow = 180)
+sync_method: 0               # 0 = immediate jump, 1 = smooth (adjtime)
+
+# --- Display ---------------------------------------------------------------
+digits: 6                    # number of digits shown (1 .. max digits)
+brightness: 100              # LED brightness in percent (0 .. 100)
+gpio: 14                     # WS2812 data GPIO (applies after reboot)
+color_mode: 0                # 0 = rotating colors, 1 = fixed color
+hue: 200                     # fixed hue (0 .. 359), used when color_mode = 1
+
+# --- Build defaults (tools/build_target.py) --------------------------------
+build:
+  target: "esp32"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
+  menuconfig: false          # open menuconfig before building
+  clean: false               # run a full clean build
+  flash: false               # flash the firmware after building
+  monitor: false             # open the serial monitor after flashing

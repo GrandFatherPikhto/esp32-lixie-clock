@@ -1,45 +1,90 @@
 menu "Clock Configuration"
 
     config LED_GPIO
-        int "GPIO number for LED strip"
+        int "GPIO number for LED strip (default)"
         default 14
         range 0 39
         help
-            GPIO pin connected to the DIN of the LED strip.
+            GPIO pin connected to the DIN of the LED strip. This is only the
+            default: the value can be changed at runtime via the serial console
+            (set gpio=<n>; save; reboot).
 
     config NUM_DIGITS
-        int "Number of digit displays"
+        int "Number of digit displays (default)"
         default 6
         range 1 8
         help
-            Number of 7-segment (actually 10-LED) displays. Usually 4 (HH:MM) or 6 (HH:MM:SS).
+            Active number of 10-LED digit displays at startup. Usually 4 (HH:MM)
+            or 6 (HH:MM:SS). Can be changed at runtime via the serial console.
 
+    config NUM_DIGITS_MAX
+        int "Maximum number of digit displays (buffer size)"
+        default 6
+        range 1 8
+        help
+            Compile-time upper bound for the pixel buffer. The runtime digit
+            count is clamped to this value. Must be >= NUM_DIGITS.
 
     config SNTP_TIME_SERVER
-        string "SNTP server name"
+        string "SNTP server name (default)"
         default "pool.ntp.org"
         help
-            Hostname of the main SNTP server.
+            Default hostname of the SNTP server. Can be changed at runtime via
+            the serial console (set ntp_server=<host>).
 
     choice SNTP_TIME_SYNC_METHOD
-        prompt "Time synchronization method"
+        prompt "Time synchronization method (default)"
         default SNTP_TIME_SYNC_METHOD_IMMED
         help
-            Time synchronization method.
+            Default time synchronization method (overridable at runtime).
 
         config SNTP_TIME_SYNC_METHOD_IMMED
             bool "update time immediately when received"
         config SNTP_TIME_SYNC_METHOD_SMOOTH
             bool "update time with smooth method (adjtime)"
         config SNTP_TIME_SYNC_METHOD_CUSTOM
-            bool "custom implementation"
+            bool "custom implementation (not used)"
     endchoice
 
     config SNTP_SYNC_INTERVAL_PERIOD
-        int "Time synchronization period"
+        int "Time synchronization period (seconds, default)"
         default 3600
+        range 30 604800
         help
-            Time synchronization period via the SNTP server (in seconds)
+            Default SNTP synchronization period in seconds. Can be changed at
+            runtime via the serial console (set sync_interval=<sec>).
 
+    config TIMEZONE_OFFSET_MINUTES
+        int "Timezone offset (minutes from UTC, default)"
+        default 180
+        range -840 840
+        help
+            Default UTC offset in minutes, e.g. 180 = UTC+3 (Moscow),
+            0 = UTC, -300 = UTC-5 (New York). Can be changed at runtime via the
+            serial console (set tz_offset=<minutes>).
+
+    config CLOCK_BRIGHTNESS_DEFAULT
+        int "Default LED brightness (percent)"
+        default 100
+        range 0 100
+        help
+            Default display brightness in percent. Can be changed at runtime via
+            the serial console (set brightness=<0..100>).
+
+    config COLOR_MODE_DEFAULT
+        int "Default color mode (0=rotate, 1=fixed)"
+        default 0
+        range 0 1
+        help
+            Default color mode: 0 = smooth HSV rotation, 1 = fixed hue.
+            Can be changed at runtime via the serial console.
+
+    config COLOR_HUE_DEFAULT
+        int "Default fixed hue (0-359)"
+        default 200
+        range 0 359
+        help
+            Default hue used in fixed color mode. Can be changed at runtime via
+            the serial console (set hue=<0..359>).
 
 endmenu

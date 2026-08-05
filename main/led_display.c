@@ -21,7 +21,7 @@ esp_err_t led_display_init(void)
     ESP_LOGI(TAG, "Create RMT TX channel");
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src = RMT_CLK_SRC_DEFAULT,
-        .gpio_num = RMT_LED_STRIP_GPIO_NUM,
+        .gpio_num = app_config_get_gpio(),   /* runtime-configurable pin */
         .mem_block_symbols = 64,
         .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
         .trans_queue_depth = 4,
