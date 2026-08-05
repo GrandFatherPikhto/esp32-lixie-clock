@@ -1,52 +1,80 @@
 # ============================================================================
-# Clock firmware configuration
+# Clock firmware configuration - complete reference of ALL settings
+# ============================================================================
 #
 # This single YAML file drives the Python helper scripts:
 #   - tools/configure_clock.py  ->  provisions the device over USB
 #     (python tools/configure_clock.py apply [--save] [--reboot])
 #   - tools/build_target.py     ->  build defaults (the "build:" section)
 #
-# The top-level keys match the device-side `set` keys 1:1 (see
-# `python tools/configure_clock.py get` on a running device for current
-# values). All values are validated / range-checked on the device.
+# Sections:
+#   wi-fi   : network the clock connects to
+#   time    : NTP server, sync interval, timezone, sync method
+#   display : digits, brightness, LED GPIO, colour palette, breathing
+#   serial  : USB port / baud / timeout used by configure_clock.py
+#   build   : defaults for build_target.py
 #
-# NOTE: ssid / password are Wi-Fi credentials for the AP the clock connects
-# to. Store this file outside version control if you don't want to commit
-# your real network credentials.
+# Top-level device keys match the firmware `set` keys 1:1 (all are validated
+# / range-checked on the device). The `serial:` and `build:` sections are NOT
+# sent to the device - they are reserved for the tools.
 #
-# Original project defaults (git history, before the runtime-config rewrite):
-#   - GPIO 14, digits 6, NTP "pool.ntp.org", sync every 3600 s (immediate)
-#   - timezone Moscow UTC+3 (the firmware used setenv("TZ","MSK-3",1))
-#   - rotating colors (pairs at hue 0 / 120 / 240), full brightness
-# The values below keep exactly that behavior. ssid / password are runtime-only
-# additions (the original had no runtime Wi-Fi settings).
+# NOTE: ssid / password are real Wi-Fi credentials. Keep this file (or at
+# least the credentials) out of version control if you don't want them pushed.
 # ============================================================================
 
-# --- Wi-Fi -----------------------------------------------------------------
-ssid: "MyWiFi"           # fill in your real network name
-password: "change-me"    # fill in your real network password
 
-# --- Time / NTP ------------------------------------------------------------
-ntp_server: "pool.ntp.org"   # NTP hostname (original default)
-sync_interval: 3600          # NTP sync period in seconds (30 .. 604800) - original 3600
-tz_offset: 180               # UTC offset in minutes; 180 = UTC+3 (Moscow, original "MSK-3")
-sync_method: 0               # 0 = immediate jump (original), 1 = smooth (adjtime)
+# ---------------------------------------------------------------------------
+# Wi-Fi
+# ---------------------------------------------------------------------------
+ssid: "MyWiFi"          # Wi-Fi network name (must be set for the clock to sync)
+password: "change-me"   # Wi-Fi password (masked on the console by the tool)
 
-# --- Display ---------------------------------------------------------------
-digits: 6                    # number of digits shown (original default 6)
-brightness: 100              # LED brightness in percent (original: full)
-gpio: 14                     # WS2812 data GPIO (original default 14; applies after reboot)
-color_mode: 0                # 0=Garland(original), 1=Mono, 2=Triad, 3=Spectrum, 4=Prism, 5=Chronos
-hue: 200                     # base hue (0..359): Mono uses it for all digits, Triad for the 1st pair
+# ---------------------------------------------------------------------------
+# Time / NTP
+# ---------------------------------------------------------------------------
+ntp_server: "pool.ntp.org"   # NTP hostname (string)
+sync_interval: 3600          # NTP sync period in seconds (30 .. 604800)
+tz_offset: 180               # UTC offset in minutes (-840 .. 840); 180 = UTC+3 (Moscow)
+sync_method: 0               # 0 = immediate jump, 1 = smooth (adjtime)
+
+# ---------------------------------------------------------------------------
+# Display
+# ---------------------------------------------------------------------------
+digits: 6                    # number of digit positions shown (1 .. 6)
+brightness: 100              # LED brightness in percent (0 .. 100)
+gpio: 14                     # WS2812 data GPIO (0 .. 39); applies after reboot
+color_mode: 0                # colour palette, 0..5 (see "Palettes" below)
+hue: 200                     # base hue 0..359 (used by Mono and Triad)
 breathing: false             # pulse the brightness (combines with any palette)
 
-# --- Serial connection (tools/configure_clock.py) ---------------------------
+# ---------------------------------------------------------------------------
+# Palettes (color_mode) - switch anytime with: set color_mode=<N>
+# ---------------------------------------------------------------------------
+#  0 = Garland  (default, original) - the three pairs start at
+#              red(0) / green(120) / blue(240) and each pair rotates
+#              its colour at its own pace. The classic look.
+#  1 = Mono     - every digit one fixed colour = `hue`.
+#  2 = Triad    - fixed per-pair colours: pair1 = `hue`,
+#              pair2 = `hue`+120, pair3 = `hue`+240 (static).
+#  3 = Spectrum - rainbow sweep: one hue shared by all pairs, slowly
+#              rotating through the whole spectrum.
+#  4 = Prism    - one static colour per digit position (6-step rainbow
+#              across the display; no rotation).
+#  5 = Chronos  - colour encodes the time: hours pair hue = hour*15,
+#              minutes pair = min*6, seconds pair = sec*6.
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Serial connection (tools/configure_clock.py)
+# ---------------------------------------------------------------------------
 serial:
   port: ""                   # e.g. "COM5" (Windows) or "/dev/ttyUSB0" (Linux); empty = auto-detect
   baud: 115200               # baud rate of the firmware console
   timeout: 8                 # seconds to wait for a device response
 
-# --- Build defaults (tools/build_target.py) --------------------------------
+# ---------------------------------------------------------------------------
+# Build defaults (tools/build_target.py)
+# ---------------------------------------------------------------------------
 build:
   target: "esp32"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
   menuconfig: false          # open menuconfig before building
