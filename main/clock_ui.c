@@ -35,10 +35,14 @@ static uint16_t color_phase[COLOR_PAIRS];   /* rotation state per digit pair */
 static int anim_step = 0;
 
 /* Cross-fade state, kept per digit position. */
-static int     fade_prev[CLOCK_DIGITS_MAX]; /* outgoing digit, or -1 */
-static int     fade_cur[CLOCK_DIGITS_MAX];  /* incoming digit, or -1 */
-static int64_t fade_start[CLOCK_DIGITS_MAX];/* when the current fade began */
-static bool    fade_on[CLOCK_DIGITS_MAX];
+static int      fade_prev[CLOCK_DIGITS_MAX]; /* outgoing digit, or -1 */
+static int      fade_cur[CLOCK_DIGITS_MAX];  /* incoming digit, or -1 */
+static int64_t  fade_start[CLOCK_DIGITS_MAX];/* when the current fade began */
+static bool     fade_on[CLOCK_DIGITS_MAX];
+static uint16_t fade_hue[CLOCK_DIGITS_MAX];  /* hue locked in for the fade's
+                                              * duration, so a mid-fade
+                                              * palette tick can't make the
+                                              * blending pair jump colour. */
 
 /* Slot-machine state. */
 static bool    slot_active;
@@ -186,6 +190,7 @@ void clock_ui_init(void)
         fade_cur[i] = -1;
         fade_start[i] = 0;
         fade_on[i] = false;
+        fade_hue[i] = 0;
     }
     slot_active = false;
     slot_step = 0;
@@ -277,20 +282,22 @@ void clock_ui_frame(uint8_t *pixels, bool time_synced)
 
         /* Cross-fade: start (or restart) a transition when the target digit
          * changes. When cross_fade is disabled, fade_on stays false and the
-         * change is applied instantly on the next frame. */
+         * change is applied instantly on the next frame. The hue is locked
+         * in for the whole transition so a palette tick landing mid-fade
+         * can't make the blending pair jump colour. */
         if (fade_cur[pos] != target_digit) {
             fade_prev[pos] = fade_cur[pos];
             fade_cur[pos] = target_digit;
             fade_start[pos] = now;
             fade_on[pos] = (fade_us > 0);
+            fade_hue[pos] = hue;
         }
-
-        uint32_t r, g, b;
-        core_display_hsv2rgb(hue, 100, 100, &r, &g, &b);
 
         /* Fade the outgoing digit out while the incoming digit fades in
          * (both live on the same 10 LEDs of the position, so they blend). */
         if (fade_on[pos] && fade_prev[pos] >= 0) {
+            uint32_t r, g, b;
+            core_display_hsv2rgb(fade_hue[pos], 100, 100, &r, &g, &b);
             int64_t elapsed = now - fade_start[pos];
             if (elapsed >= (int64_t)fade_us) {
                 fade_on[pos] = false;
@@ -310,6 +317,8 @@ void clock_ui_frame(uint8_t *pixels, bool time_synced)
         }
 
         fade_on[pos] = false;
+        uint32_t r, g, b;
+        core_display_hsv2rgb(hue, 100, 100, &r, &g, &b);
         core_display_set_digit(pixels, CLOCK_LED_NUMBERS_MAX, pos, fade_cur[pos],
                                (uint8_t)r, (uint8_t)g, (uint8_t)b, brightness);
     }
