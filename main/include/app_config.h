@@ -74,6 +74,7 @@ uint8_t     app_config_get_night_start(void);           /* 0..23 hour */
 uint8_t     app_config_get_night_end(void);             /* 0..23 hour (exclusive) */
 uint16_t    app_config_get_cross_fade(void);            /* fade duration in ms, 0=off */
 uint32_t    app_config_get_slot_machine_interval(void); /* 0=off, minutes */
+uint8_t     app_config_get_wifi_power_save(void);       /* 0=Wi-Fi stays on, 1=radio off */
 
 #ifdef __cplusplus
 }

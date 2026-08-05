@@ -156,4 +156,14 @@ menu "Clock Configuration"
             effect. Can be changed at runtime via the serial console
             (set slot_machine_interval=<0..1440>).
 
+    config WIFI_POWER_SAVE_DEFAULT
+        bool "Wi-Fi radio off after time sync by default"
+        default n
+        help
+            When enabled, the Wi-Fi radio is switched off after the first time
+            sync and only woken periodically (per sync_interval) to re-sync.
+            The display keeps running; lower RF/power at the cost of a
+            reconnect on every resync. Can be changed at runtime via the serial
+            console (set wifi_power_save=<0|1>).
+
 endmenu

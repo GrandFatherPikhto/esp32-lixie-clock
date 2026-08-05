@@ -98,6 +98,8 @@ static void test_set_numeric_keys(void)
     TEST_ASSERT_EQUAL_UINT16(150, c.cross_fade);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "slot_machine_interval", "30", 6));
     TEST_ASSERT_EQUAL_UINT32(30, c.slot_machine_interval);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "wifi_power_save", "1", 6));
+    TEST_ASSERT_EQUAL_UINT8(1, c.wifi_power_save);
 }
 
 static void test_range_validation(void)
@@ -136,6 +138,8 @@ static void test_range_validation(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "cross_fade", "abc", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "slot_machine_interval", "1441", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "slot_machine_interval", "-1", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "wifi_power_save", "2", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "wifi_power_save", "-1", 6));
 }
 
 static void test_range_boundaries_ok(void)
@@ -171,6 +175,8 @@ static void test_range_boundaries_ok(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "cross_fade", "2000", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "slot_machine_interval", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "slot_machine_interval", "1440", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "wifi_power_save", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "wifi_power_save", "1", 6));
 }
 
 static void test_unknown_key_and_null(void)

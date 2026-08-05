@@ -167,6 +167,12 @@ int core_config_set_value(clock_config_t *cfg, const char *key,
             return CORE_CFG_ERR_INVALID;
         }
         cfg->slot_machine_interval = (uint32_t)v;
+    } else if (strcmp(key, "wifi_power_save") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_WIFI_POWER_SAVE_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->wifi_power_save = (uint8_t)v;
     } else {
         return CORE_CFG_ERR_UNKNOWN;
     }

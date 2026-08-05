@@ -31,6 +31,8 @@ extern "C" {
 #define CORE_CFG_CROSS_FADE_MAX           2000
 #define CORE_CFG_SLOT_INTERVAL_MIN        0
 #define CORE_CFG_SLOT_INTERVAL_MAX        1440
+/* Wi-Fi power save: switch the radio off after time sync. */
+#define CORE_CFG_WIFI_POWER_SAVE_MAX      1
 
 /* Return codes for core_config_set_value(). */
 #define CORE_CFG_OK             0
@@ -63,6 +65,7 @@ typedef struct {
     uint8_t  night_end;             /* 0..23, night window end hour (exclusive) */
     uint16_t cross_fade;            /* fade duration in ms; 0 = off (instant) */
     uint32_t slot_machine_interval; /* 0=off, else minutes between slot rolls */
+    uint8_t  wifi_power_save;       /* 0=Wi-Fi stays on, 1=radio off after sync */
 } clock_config_t;
 
 /**

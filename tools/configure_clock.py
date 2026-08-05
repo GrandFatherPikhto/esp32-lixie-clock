@@ -77,7 +77,7 @@ KNOWN_KEYS = {
     "sync_method",
     "breathing",
     "night_mode", "night_low_brightness", "night_start", "night_end",
-    "cross_fade", "slot_machine_interval",
+    "cross_fade", "slot_machine_interval", "wifi_power_save",
 }
 
 # YAML top-level sections that are NOT device settings (silently skipped by

@@ -9,6 +9,11 @@ extern "C" {
 
 /**
  * @brief Connect to Wi-Fi and synchronize time via SNTP (blocking).
+ *
+ * With Wi-Fi power save enabled the SNTP client is stopped after the sync, so
+ * the caller may switch the radio off and re-call this later to re-sync.
+ * Otherwise the client is left running for background updates.
+ *
  * @return true on success, false on failure (caller may retry).
  */
 bool init_sntp(void);

@@ -34,6 +34,15 @@ static void sync_task(void *arg)
     ESP_LOGI(TAG, "Starting time sync task");
     while (1) {
         if (init_sntp()) {
+            if (app_config_get_wifi_power_save()) {
+                /* Power save: drop the radio and re-sync later. The display
+                 * keeps running from the RTC-based libc time meanwhile. */
+                wifi_manager_disconnect();
+                ESP_LOGI(TAG, "Time synced; radio off for %lu s",
+                         (unsigned long)app_config_get_sync_interval());
+                vTaskDelay(pdMS_TO_TICKS(app_config_get_sync_interval() * 1000));
+                continue;
+            }
             ESP_LOGI(TAG, "Time sync completed, sync task will exit");
             vTaskDelete(NULL);
         }

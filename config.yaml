@@ -28,6 +28,7 @@
 # ---------------------------------------------------------------------------
 ssid: "MyWiFi"          # Wi-Fi network name (must be set for the clock to sync)
 password: "change-me"   # Wi-Fi password (masked on the console by the tool)
+wifi_power_save: false  # switch the Wi-Fi radio off after time sync (0/1 or true/false)
 
 # ---------------------------------------------------------------------------
 # Time / NTP

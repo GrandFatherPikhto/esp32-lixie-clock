@@ -89,6 +89,7 @@ Requires `pyserial` and `pyyaml` (`pip install -r tools/requirements.txt`; or us
 | `night_end` | Night window end hour (0..23, exclusive) | `7` |
 | `cross_fade` | Fade duration for digit changes, ms (0 = off, instant) | `150` |
 | `slot_machine_interval` | Minutes between automatic 0–9 "slot machine" rolls (0 = off) | `30` |
+| `wifi_power_save` | `0` = Wi-Fi stays on, `1` = radio off after sync (wakes every `sync_interval` to resync) | `0` |
 
 Console commands: `get`, `set`, `save`, `reset`, `reboot`, `status`, `help`.
 
