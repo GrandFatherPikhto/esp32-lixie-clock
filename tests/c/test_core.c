@@ -80,6 +80,8 @@ static void test_set_numeric_keys(void)
     TEST_ASSERT_EQUAL_UINT16(200, c.hue);
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "sync_method", "1", 6));
     TEST_ASSERT_EQUAL_UINT8(1, c.sync_method);
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));
+    TEST_ASSERT_EQUAL_UINT8(1, c.breathing);
 }
 
 static void test_range_validation(void)
@@ -92,8 +94,9 @@ static void test_range_validation(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "sync_interval", "604801", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "tz_offset", "-841", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "tz_offset", "841", 6));
-    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "color_mode", "2", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "color_mode", "6", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "sync_method", "3", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "breathing", "2", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "hue", "360", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "gpio", "40", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_ERR_INVALID, core_config_set_value(&c, "digits", "0", 6));
@@ -115,6 +118,9 @@ static void test_range_boundaries_ok(void)
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "brightness", "100", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue", "0", 6));
     TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "hue", "359", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "color_mode", "5", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "0", 6));
+    TEST_ASSERT_EQUAL_INT(CORE_CFG_OK, core_config_set_value(&c, "breathing", "1", 6));
 }
 
 static void test_unknown_key_and_null(void)

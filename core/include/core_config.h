@@ -21,6 +21,8 @@ extern "C" {
 #define CORE_CFG_BRIGHTNESS_MAX       100
 #define CORE_CFG_GPIO_MAX             39
 #define CORE_CFG_HUE_MAX              359
+/* color_mode: 0=Garland(orig), 1=Mono, 2=Triad, 3=Spectrum, 4=Prism, 5=Chronos */
+#define CORE_CFG_COLOR_MODE_MAX       5
 
 /* Return codes for core_config_set_value(). */
 #define CORE_CFG_OK             0
@@ -41,9 +43,10 @@ typedef struct {
     uint8_t  brightness;    /* 0..100 */
     uint8_t  digits;        /* 1..max_digits */
     int8_t   gpio;
-    uint8_t  color_mode;    /* 0=rotate, 1=fixed */
+    uint8_t  color_mode;    /* 0..CORE_CFG_COLOR_MODE_MAX (see header) */
     uint16_t hue;           /* 0..359 */
     uint8_t  sync_method;   /* 0=immediate, 1=smooth */
+    uint8_t  breathing;     /* 0=off, 1=pulsing brightness */
 } clock_config_t;
 
 /**

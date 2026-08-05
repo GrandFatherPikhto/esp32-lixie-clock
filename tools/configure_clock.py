@@ -74,6 +74,7 @@ KNOWN_KEYS = {
     "ntp_server", "sync_interval", "tz_offset",
     "ssid", "password",
     "brightness", "digits", "gpio", "color_mode", "hue", "sync_method",
+    "breathing",
 }
 
 # YAML top-level sections that are NOT device settings (silently skipped by

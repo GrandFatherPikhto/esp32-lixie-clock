@@ -302,6 +302,15 @@ def test_load_serial_config_not_dict(tmp_path):
     assert cc.load_serial_config(str(p)) == {}
 
 
+def test_cmd_apply_includes_breathing(tmp_path, capsys):
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text("ssid: MyWiFi\nbreathing: false\n", encoding="utf-8")
+    command = "set ssid=MyWiFi breathing=0"
+    ser = FakeSerial({command: (command + "\r\nok\r\n").encode()})
+    cc.cmd_apply(ser, _ns(config=str(cfg)))
+    assert ser.written[-1] == (command + "\r\n").encode()
+
+
 def test_cmd_apply_masks_password(tmp_path, capsys):
     cfg = tmp_path / "cfg.yaml"
     cfg.write_text("ssid: MyWiFi\npassword: DominusVobiscum\n", encoding="utf-8")

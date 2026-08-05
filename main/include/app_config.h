@@ -62,9 +62,10 @@ const char *app_config_get_password(void);      /* Wi-Fi password          */
 uint8_t     app_config_get_brightness(void);    /* 0..100 percent          */
 uint8_t     app_config_get_digits(void);        /* 1..CLOCK_DIGITS_MAX     */
 int8_t      app_config_get_gpio(void);          /* LED strip GPIO          */
-uint8_t     app_config_get_color_mode(void);    /* 0=rotate, 1=fixed       */
+uint8_t     app_config_get_color_mode(void);    /* 0..5 (Garland/Mono/Triad/Spectrum/Prism/Chronos) */
 uint16_t    app_config_get_hue(void);           /* 0..359                  */
 uint8_t     app_config_get_sync_method(void);   /* 0=immediate, 1=smooth   */
+uint8_t     app_config_get_breathing(void);     /* 0=off, 1=pulsing        */
 
 #ifdef __cplusplus
 }

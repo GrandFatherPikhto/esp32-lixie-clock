@@ -36,8 +36,9 @@ sync_method: 0               # 0 = immediate jump (original), 1 = smooth (adjtim
 digits: 6                    # number of digits shown (original default 6)
 brightness: 100              # LED brightness in percent (original: full)
 gpio: 14                     # WS2812 data GPIO (original default 14; applies after reboot)
-color_mode: 0                # 0 = rotating colors (original), 1 = fixed color
-hue: 200                     # fixed hue (0 .. 359), only used when color_mode = 1
+color_mode: 0                # 0=Garland(original), 1=Mono, 2=Triad, 3=Spectrum, 4=Prism, 5=Chronos
+hue: 200                     # base hue (0..359): Mono uses it for all digits, Triad for the 1st pair
+breathing: false             # pulse the brightness (combines with any palette)
 
 # --- Serial connection (tools/configure_clock.py) ---------------------------
 serial:

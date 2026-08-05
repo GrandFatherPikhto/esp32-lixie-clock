@@ -33,6 +33,7 @@ static void set_defaults(void)
     cfg.gpio              = CONFIG_LED_GPIO;
     cfg.color_mode        = CONFIG_COLOR_MODE_DEFAULT;
     cfg.hue               = CONFIG_COLOR_HUE_DEFAULT;
+    cfg.breathing         = 0;   /* breathing is off by default */
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH
     cfg.sync_method       = 1;
 #else
@@ -133,6 +134,7 @@ void app_config_dump(void)
     printf("color_mode      = %u\n", cfg.color_mode);
     printf("hue             = %u\n", cfg.hue);
     printf("sync_method     = %u\n", cfg.sync_method);
+    printf("breathing       = %u\n", cfg.breathing);
 }
 
 /* ---------------------------------------------------------------------------
@@ -150,3 +152,4 @@ int8_t      app_config_get_gpio(void)        { return cfg.gpio; }
 uint8_t     app_config_get_color_mode(void)  { return cfg.color_mode; }
 uint16_t    app_config_get_hue(void)         { return cfg.hue; }
 uint8_t     app_config_get_sync_method(void) { return cfg.sync_method; }
+uint8_t     app_config_get_breathing(void)   { return cfg.breathing; }
