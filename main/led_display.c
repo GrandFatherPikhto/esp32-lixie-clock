@@ -22,9 +22,19 @@ esp_err_t led_display_init(void)
     rmt_tx_channel_config_t tx_chan_config = {
         .clk_src = RMT_CLK_SRC_DEFAULT,
         .gpio_num = app_config_get_gpio(),   /* runtime-configurable pin */
-        .mem_block_symbols = 64,
+        /* This is the only RMT channel on the board, so it can use the full
+         * hardware memory block instead of the default 64 symbols. A small
+         * block forces the driver to refill it via ISR many times per frame
+         * (~22x for 60 LEDs at 64 symbols); if a refill is delayed (e.g. by
+         * the Wi-Fi stack, which stays connected by default), the WS2812
+         * bitstream desyncs from that point onward, showing garbage colors
+         * on the LEDs transmitted afterwards. A raised interrupt priority
+         * plus the full memory block eliminates the desync (confirmed on
+         * hardware). */
+        .mem_block_symbols = 512,
         .resolution_hz = RMT_LED_STRIP_RESOLUTION_HZ,
         .trans_queue_depth = 4,
+        .intr_priority = 3,
     };
     ESP_RETURN_ON_ERROR(rmt_new_tx_channel(&tx_chan_config, &led_chan), TAG, "Failed to create RMT TX channel");
 
