@@ -28,8 +28,9 @@ class FakeSerial:
 
     PROMPT = configure_clock.PROMPT
 
-    def __init__(self, responses=None):
+    def __init__(self, responses=None, auto_ack=False):
         self.responses = responses or {}
+        self.auto_ack = auto_ack
         self.written = []
         self.reset_count = 0
         self._buffer = b""
@@ -42,6 +43,9 @@ class FakeSerial:
         self.written.append(data)
         command = data.decode("utf-8").strip()
         response = self.responses.get(command)
+        if response is None and self.auto_ack:
+            # Acknowledge any (e.g. chunked) command without registering it.
+            response = (command + "\r\nok\r\n").encode()
         # Only append the prompt when a response exists; otherwise leave the
         # buffer empty so send_command() can time out (used by the tests).
         self._buffer = (response + self.PROMPT) if response is not None else b""

@@ -1,4 +1,4 @@
-#!../.venv/bin/python
+#!.venv/bin/python
 # -*- coding: utf-8 -*-
 """
 configure_clock.py - configure the ESP32 Lixie clock over the board's USB port.
@@ -68,6 +68,12 @@ EOL = "\r\n"
 DEFAULT_BAUD = 115200
 DEFAULT_TIMEOUT = 8.0   # seconds to wait for a device response (override via config.yaml `serial.timeout`)
 PASSWORD_MASK = "******"   # replaces the Wi-Fi password in any console output
+
+# The device console line buffer (ESP Console default) is 256 bytes. A single
+# `set` with all keys would be truncated there, and the overflow would arrive
+# as a separate line and be rejected as an unrecognized command. Keep each
+# `set` command comfortably under that limit.
+MAX_CMD_LINE_LEN = 200
 
 # Device-side keys accepted by the firmware `set` command.
 KNOWN_KEYS = {
@@ -277,6 +283,21 @@ def cmd_get(ser, args):
             print("%-*s = %s" % (width, key, data[key]))
 
 
+def _run_set_chunks(ser, pairs, secret):
+    """Send `set key=value ...` split into chunks that fit the console line
+    buffer; print each device response with the password masked."""
+    chunk = "set"
+    for pair in pairs:
+        candidate = chunk + " " + pair
+        if len(candidate) > MAX_CMD_LINE_LEN and chunk != "set":
+            for line in send_command(ser, chunk):
+                print(redact(line, secret))
+            chunk = "set"
+        chunk = chunk + " " + pair
+    for line in send_command(ser, chunk):
+        print(redact(line, secret))
+
+
 def cmd_set(ser, args):
     pairs = []
     for item in args.kv:
@@ -284,10 +305,7 @@ def cmd_set(ser, args):
             sys.exit("Invalid key=value pair: %s" % item)
         pairs.append(item)
     secret = _password_from_pairs(pairs)
-    command = "set " + " ".join(pairs)
-    lines = send_command(ser, command)
-    for line in lines:
-        print(redact(line, secret))
+    _run_set_chunks(ser, pairs, secret)
 
 
 def cmd_save(ser, args):
@@ -339,9 +357,7 @@ def cmd_apply(ser, args):
         sys.exit("No configurable keys found in %s" % path)
     secret = _password_from_pairs(pairs)
     print("Applying %d setting(s) from %s:" % (len(pairs), path))
-    command = "set " + " ".join(pairs)
-    for line in send_command(ser, command):
-        print(redact(line, secret))
+    _run_set_chunks(ser, pairs, secret)
 
     if args.save:
         for line in send_command(ser, "save"):

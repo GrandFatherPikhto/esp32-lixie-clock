@@ -118,6 +118,7 @@ esp_err_t config_console_init(void)
 {
     esp_console_repl_config_t repl_cfg = ESP_CONSOLE_REPL_CONFIG_DEFAULT();
     repl_cfg.prompt = "clock> ";
+    repl_cfg.max_cmdline_length = 512;   /* room for long multi-key `set` commands */
 
     esp_console_dev_uart_config_t hw_cfg = ESP_CONSOLE_DEV_UART_CONFIG_DEFAULT();
 

@@ -285,6 +285,56 @@ def test_cmd_apply_skips_reserved_keys(tmp_path, capsys):
     assert "build" not in out
 
 
+def test_cmd_apply_chunks_long_set_commands(tmp_path, capsys):
+    # A full 21-key config would overflow the device's 256-byte console line
+    # buffer if sent as a single `set`; the tool must split it into multiple
+    # `set` commands, each short enough to be accepted.
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text(
+        "ssid: MyWiFi\n"
+        "password: secret\n"
+        "wifi_power_save: false\n"
+        "ntp_server: pool.ntp.org\n"
+        "sync_interval: 3600\n"
+        "tz_offset: 180\n"
+        "sync_method: 0\n"
+        "digits: 6\n"
+        "brightness: 100\n"
+        "gpio: 14\n"
+        "color_mode: 0\n"
+        "hue: 200\n"
+        "hue_shift: 0\n"
+        "hue_2: 200\n"
+        "breathing: false\n"
+        "night_mode: false\n"
+        "night_low_brightness: 5\n"
+        "night_start: 23\n"
+        "night_end: 7\n"
+        "cross_fade: 150\n"
+        "slot_machine_interval: 30\n",
+        encoding="utf-8",
+    )
+    ser = FakeSerial({}, auto_ack=True)
+    cc.cmd_apply(ser, _ns(config=str(cfg)))
+
+    commands = [w.decode("utf-8").strip() for w in ser.written]
+    assert len(commands) >= 2                 # the split actually happened
+    for cmd in commands:
+        assert cmd.startswith("set ")         # every line is a `set` command
+        assert len(cmd) + len("\r\n") < 256   # fits the console line buffer
+
+    pairs = []
+    for cmd in commands:
+        pairs += cmd.split(" ")[1:]
+    assert len(pairs) == 21                   # no setting is lost
+    assert "night_start=23" in pairs
+    assert "slot_machine_interval=30" in pairs
+
+    out = capsys.readouterr().out
+    assert "Applying 21 setting(s)" in out
+    assert "secret" not in out                # the password stays masked
+
+
 def test_load_serial_config(tmp_path):
     p = tmp_path / "cfg.yaml"
     p.write_text("ssid: x\nserial:\n  port: COM5\n  baud: 115200\n  timeout: 10\n",
