@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!../.venv/bin/python
 # -*- coding: utf-8 -*-
 """
 build_target.py - build the clock firmware for a specific ESP32 variant.

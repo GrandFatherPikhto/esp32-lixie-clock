@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!../.venv/bin/python
 # -*- coding: utf-8 -*-
 """
 configure_clock.py - configure the ESP32 Lixie clock over the board's USB port.
