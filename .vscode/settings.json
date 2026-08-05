@@ -4,7 +4,7 @@
     "board/esp32-wrover-kit-3.3v.cfg"
   ],
   "idf.portWin": "COM5",
-  "idf.currentSetup": "esp-idf-v6.0",
+  "idf.currentSetup": "C:\\esp\\v6.0.2\\esp-idf",
   "idf.espIdfPath": "C:\\esp\\v6.0.2\\esp-idf",
   "idf.toolsPath": "C:\\Espressif",
   "idf.pythonBinPath": "C:\\Espressif\\python_env\\idf6.0_py3.13_env\\Scripts\\python.exe",
