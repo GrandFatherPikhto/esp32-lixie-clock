@@ -365,23 +365,45 @@ def test_cmd_apply_no_usable_keys_exits(tmp_path):
 
 def test_auto_detect_port_prefers_bridge(monkeypatch):
     class Port:
-        def __init__(self, device, description):
+        def __init__(self, device, description, vid=None, pid=None):
             self.device = device
             self.description = description
+            self.vid = vid
+            self.pid = pid
 
     ports = [
         Port("COM1", "Standard Serial over Bluetooth link"),
-        Port("COM5", "Silicon Labs CP210x USB to UART Bridge"),
+        Port("COM5", "Silicon Labs CP210x USB to UART Bridge", 0x10C4, 0xEA60),
     ]
     monkeypatch.setattr("serial.tools.list_ports.comports", lambda: ports)
     assert cc.auto_detect_port() == "COM5"
 
 
-def test_auto_detect_port_falls_back_to_first(monkeypatch):
+def test_auto_detect_port_matches_vid_pid_when_description_unhelpful(monkeypatch):
+    # The CP2102 bridge reports a generic description, so only the numeric
+    # VID/PID (0x10C4, 0xEA60) identifies it.
     class Port:
-        def __init__(self, device, description):
+        def __init__(self, device, description, vid, pid):
             self.device = device
             self.description = description
+            self.vid = vid
+            self.pid = pid
+
+    ports = [
+        Port("COM3", "Communications Port", None, None),
+        Port("COM9", "Some USB Serial", 0x10C4, 0xEA60),
+    ]
+    monkeypatch.setattr("serial.tools.list_ports.comports", lambda: ports)
+    assert cc.auto_detect_port() == "COM9"
+
+
+def test_auto_detect_port_falls_back_to_first(monkeypatch):
+    class Port:
+        def __init__(self, device, description, vid=None, pid=None):
+            self.device = device
+            self.description = description
+            self.vid = vid
+            self.pid = pid
 
     ports = [Port("COM3", "Some Random Device")]
     monkeypatch.setattr("serial.tools.list_ports.comports", lambda: ports)

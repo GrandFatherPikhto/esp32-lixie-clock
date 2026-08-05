@@ -95,12 +95,27 @@ LOG_LINE_RE = re.compile(r"^[IWEVDv]\s*\([\d:,.]+\)\s+\S+:\s")
 # Serial helpers
 # ---------------------------------------------------------------------------
 
+# Common USB-to-UART bridge (VID, PID) pairs found on ESP32 dev boards. A
+# numeric match is exact and independent of the OS-provided description, so it
+# is preferred over matching the description text below.
+USB_UART_BRIDGES = {
+    (0x10C4, 0xEA60),  # Silicon Labs CP2102 / CP2104
+    (0x1A86, 0x7523),  # QinHeng CH340 / CH341
+    (0x0403, 0x6001),  # FTDI FT232R / FT232RL
+}
+
+
 def auto_detect_port():
     import serial.tools.list_ports as ports
     all_ports = list(ports.comports())
     if not all_ports:
         sys.exit("No serial ports found. Connect the board and specify --port.")
-    # Prefer common ESP32 USB-to-UART bridge descriptions.
+    # Prefer a numeric VID/PID match (exact, works even when the OS description
+    # is missing or unhelpful).
+    for p in all_ports:
+        if (getattr(p, "vid", None), getattr(p, "pid", None)) in USB_UART_BRIDGES:
+            return p.device
+    # Fall back to matching common ESP32 USB-to-UART bridge names.
     keywords = ("cp210", "ch340", "ch341", "ftdi", "silicon labs", "uart")
     for p in all_ports:
         desc = (p.description or "").lower()
