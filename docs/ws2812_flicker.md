@@ -32,12 +32,22 @@ Both a **software timing** fault and a **power/wiring** fault can produce exactl
 - A **3.3 V data signal** driving a 5 V strip (high threshold ~0.7·VDD ≈ 3.5 V) over a long data wire is marginal.
 - A power fault would **not** have been improved by the memory/priority change, so it is the secondary suspect for the residual rare flicker.
 
+### 3.3 Hardware — defective LED or bad solder joint (possible)
+
+- Each WS2812 **regenerates** the data signal for the next LED. If one element — an LED, or more commonly its **DOUT→DIN solder joint / connector** — is marginal, it passes a weak/glitchy signal downstream: the LEDs **before** that point stay correct, the ones **after** occasionally show corrupted data.
+- This matches the "**last 3–4 digits only**" pattern exactly when the bad element sits at the boundary before the last digits.
+- A **cold solder joint** on the data line is a classic cause of this exact intermittent symptom.
+- A purely defective LED keeps misbehaving regardless of the RMT timing fix, so the improvement from `mem_block`/`intr_priority` weighs against a bad LED being the *primary* cause — but a marginal tail element can still explain the residual rare flicker.
+
 ## 4. How to tell them apart (no hardware changes)
 
 1. **Brightness test** — `set brightness=20 save`. If the flicker disappears → power/current. If it persists → data timing.
 2. **White vs colour** — white (max current) flicker → power.
 3. **Event correlation** — does it happen right after `configure_clock.py ... save`, a Wi-Fi reconnect, an NTP resync, or a slot-machine run? If yes → NVS/Wi-Fi ISR delay (software).
 4. **Monitor logs** — [`led_display_send()`](../main/led_display.c) logs `rmt_transmit failed` and `RMT tx not done in time; skipping frame`. If flicker coincides with these → software.
+5. **Static-frame test** — show a static solid colour (all digits one colour) and watch the tail. If the tail flickers on a **static** image, it is not caused by frame-content changes → suspect a marginal LED/joint or power, not frame-driven RMT refills.
+6. **Cut-off tail test** — temporarily set `digits=4` (excluding the suspect tail). If the flicker disappears **entirely**, the bad element is in the cut-off tail.
+7. **Inspect the boundary** — check/reflow the DOUT→DIN solder joint or connector between the last always-correct digit and the first flickering one; a cold joint or loose connector is a prime suspect.
 
 ## 5. Possible measures
 
@@ -58,6 +68,7 @@ Both a **software timing** fault and a **power/wiring** fault can produce exactl
 4. **Data wire routing** — short, and kept away from the 5 V power lines (separated or twisted).
 5. **Level shifter (74HCT245 / SN74AHCT125)** if the data is 3.3 V on a 5 V strip over a longer run.
 6. **Common ground** between the ESP32 and the strip power supply.
+7. **Check the boundary element** — inspect/reflow the DOUT→DIN solder joint between the last always-correct digit and the first flickering one; replace a marginal LED at that point if suspected.
 
 ## 6. Diagnostic instrumentation (proposed)
 
@@ -65,4 +76,4 @@ Add counters in [`led_display_send()`](../main/led_display.c) for `rmt_transmit`
 
 ## 7. Summary
 
-The flicker is **WS2812 bitstream corruption** (shifted data → wrong LED/colour in a position). The dominant cause on this hardware is **RMT refill ISR latency**, which the `mem_block_symbols = 512` + `intr_priority = 3` changes largely fixed. The residual rare flicker is most likely either a rare ISR delay (NVS write, Wi-Fi event) or marginal power/wiring — the brightness test and the proposed counters will tell which.
+The flicker is **WS2812 bitstream corruption** (shifted data → wrong LED/colour in a position). The dominant cause on this hardware is **RMT refill ISR latency**, which the `mem_block_symbols = 512` + `intr_priority = 3` changes largely fixed. The residual rare flicker is most likely a rare ISR delay (NVS write, Wi-Fi event), marginal power/wiring, **or a defective LED / bad solder joint at the tail boundary** — the brightness test, the static/cut-off tests, and the proposed counters will tell which.
