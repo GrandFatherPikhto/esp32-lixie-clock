@@ -85,7 +85,7 @@ Console commands: `get`, `set`, `save`, `reset`, `reboot`, `status`, `help`.
 
 #### YAML configuration (`config.yaml`)
 
-The project ships with a [`config.yaml`](config.yaml) file in the root. It is the single source of truth for provisioning the device and is also read by [`build_target.py`](tools/build_target.py) (the `build:` section). The top-level keys map 1:1 to the `set` keys above.
+The project ships with a [`config.yaml`](config.yaml) file in the root. It is the single source of truth for provisioning the device and is also read by [`build_target.py`](tools/build_target.py) (the `build:` section). The top-level keys map 1:1 to the `set` keys above. An optional `serial:` section sets the USB connection used by `configure_clock.py` — `port` (empty = auto-detect), `baud`, and `timeout` (response wait in seconds); the `--port`/`--baud` CLI options override it, and `apply` ignores this section when building the `set` command.
 
 ```bash
 # Apply everything from config.yaml, persist to NVS and reboot

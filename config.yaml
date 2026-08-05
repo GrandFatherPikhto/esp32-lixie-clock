@@ -39,9 +39,15 @@ gpio: 14                     # WS2812 data GPIO (original default 14; applies af
 color_mode: 0                # 0 = rotating colors (original), 1 = fixed color
 hue: 200                     # fixed hue (0 .. 359), only used when color_mode = 1
 
+# --- Serial connection (tools/configure_clock.py) ---------------------------
+serial:
+  port: ""                   # e.g. "COM5" (Windows) or "/dev/ttyUSB0" (Linux); empty = auto-detect
+  baud: 115200               # baud rate of the firmware console
+  timeout: 8                 # seconds to wait for a device response
+
 # --- Build defaults (tools/build_target.py) --------------------------------
 build:
-  target: "esp32s3"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
+  target: "esp32"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
   menuconfig: false          # open menuconfig before building
   clean: false               # run a full clean build
   flash: false               # flash the firmware after building

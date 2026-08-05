@@ -66,6 +66,7 @@ except ImportError:  # pragma: no cover
 PROMPT = b"clock> "
 EOL = "\r\n"
 DEFAULT_BAUD = 115200
+DEFAULT_TIMEOUT = 8.0   # seconds to wait for a device response (override via config.yaml `serial.timeout`)
 
 # Device-side keys accepted by the firmware `set` command.
 KNOWN_KEYS = {
@@ -73,6 +74,10 @@ KNOWN_KEYS = {
     "ssid", "password",
     "brightness", "digits", "gpio", "color_mode", "hue", "sync_method",
 }
+
+# YAML top-level sections that are NOT device settings (silently skipped by
+# `apply`): "build" belongs to build_target.py, "serial" to this tool.
+RESERVED_KEYS = {"build", "serial"}
 
 # Match the device-side "key = value" lines printed by the `get` command.
 KEYVAL_RE = re.compile(r"^\s*(\w+)\s*=\s*(.*?)\s*$")
@@ -100,8 +105,10 @@ def auto_detect_port():
     return all_ports[0].device
 
 
-def send_command(ser, command, timeout=8.0):
+def send_command(ser, command, timeout=None):
     """Send one command line and return everything printed before the prompt."""
+    if timeout is None:
+        timeout = DEFAULT_TIMEOUT
     ser.reset_input_buffer()
     ser.write((command + EOL).encode())
 
@@ -180,6 +187,16 @@ def load_yaml(path):
         sys.exit("Failed to parse %s: %s" % (path, exc))
 
 
+def load_serial_config(explicit):
+    """Return the `serial:` section of the YAML config, or {} if absent."""
+    path = resolve_config_path(explicit)
+    if path is None:
+        return {}
+    data = load_yaml(path)
+    ser = data.get("serial")
+    return ser if isinstance(ser, dict) else {}
+
+
 # ---------------------------------------------------------------------------
 # Subcommands
 # ---------------------------------------------------------------------------
@@ -245,8 +262,8 @@ def cmd_apply(ser, args):
 
     pairs = []
     for key, value in data.items():
-        if key == "build":
-            continue  # reserved for build_target.py
+        if key in RESERVED_KEYS:
+            continue  # not a device setting (build_target.py / configure_clock.py options)
         if key not in KNOWN_KEYS:
             print("Warning: skipping unknown key %r" % key)
             continue
@@ -280,8 +297,9 @@ def main():
     parser.add_argument("--port", "-p", default=None,
                         help="Serial port (e.g. COM5 on Windows, /dev/ttyUSB0 on Linux). "
                              "Auto-detected if omitted.")
-    parser.add_argument("--baud", "-b", type=int, default=DEFAULT_BAUD,
-                        help="Serial baud rate (default: %d)" % DEFAULT_BAUD)
+    parser.add_argument("--baud", "-b", type=int, default=None,
+                        help="Serial baud rate (default: from config.yaml, else %d)"
+                             % DEFAULT_BAUD)
     parser.add_argument("--config", "-c", default=None,
                         help="Path to a YAML file for the `apply` command "
                              "(default: ./config.yaml in the project root)")
@@ -309,8 +327,16 @@ def main():
 
     args = parser.parse_args()
 
-    port = args.port or auto_detect_port()
-    ser = serial.Serial(port, args.baud, timeout=1.0)
+    # Serial connection settings can come from the `serial:` section of the
+    # YAML config (config.yaml); explicit CLI options always win.
+    global DEFAULT_TIMEOUT
+    ser_cfg = load_serial_config(args.config)
+    port = args.port or (ser_cfg.get("port") or None) or auto_detect_port()
+    baud = args.baud if args.baud is not None \
+        else int(ser_cfg.get("baud", DEFAULT_BAUD))
+    DEFAULT_TIMEOUT = float(ser_cfg.get("timeout", DEFAULT_TIMEOUT))
+
+    ser = serial.Serial(port, baud, timeout=1.0)
     try:
         time.sleep(0.2)           # let the device settle
         handlers = {

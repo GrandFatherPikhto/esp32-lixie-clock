@@ -194,7 +194,8 @@ def test_cmd_apply_builds_set_command(tmp_path, capsys):
         "color_mode: true\n"     # bool -> int
         "hue: 200\n"
         "unknown_key: x\n"       # skipped with a warning
-        "build:\n  target: esp32\n"  # reserved for build_target.py
+        "build:\n  target: esp32\n"  # reserved, silently skipped
+        "serial:\n  port: COM5\n"    # reserved, silently skipped
         "",
         encoding="utf-8",
     )
@@ -205,6 +206,44 @@ def test_cmd_apply_builds_set_command(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "Applying 5 setting(s)" in out
     assert "unknown_key" in out  # the skip warning
+    # Reserved keys are skipped silently (no "unknown key" warning for them).
+    assert "skipping unknown key 'build'" not in out
+    assert "skipping unknown key 'serial'" not in out
+
+
+def test_cmd_apply_skips_reserved_keys(tmp_path, capsys):
+    cfg = tmp_path / "cfg.yaml"
+    cfg.write_text(
+        "ssid: MyWiFi\n"
+        "build:\n  target: esp32\n"
+        "serial:\n  port: COM5\n",
+        encoding="utf-8",
+    )
+    expected = "set ssid=MyWiFi"
+    ser = FakeSerial({expected: (expected + "\r\nok\r\n").encode()})
+    cc.cmd_apply(ser, _ns(config=str(cfg)))
+    out = capsys.readouterr().out
+    assert ser.written[-1] == (expected + "\r\n").encode()
+    assert "serial" not in out
+    assert "build" not in out
+
+
+def test_load_serial_config(tmp_path):
+    p = tmp_path / "cfg.yaml"
+    p.write_text("ssid: x\nserial:\n  port: COM5\n  baud: 115200\n  timeout: 10\n",
+                 encoding="utf-8")
+    assert cc.load_serial_config(str(p)) == {"port": "COM5", "baud": 115200, "timeout": 10}
+
+
+def test_load_serial_config_missing_default(tmp_path, monkeypatch):
+    monkeypatch.setattr(cc, "default_config_path", lambda: tmp_path / "none.yaml")
+    assert cc.load_serial_config(None) == {}
+
+
+def test_load_serial_config_not_dict(tmp_path):
+    p = tmp_path / "cfg.yaml"
+    p.write_text("serial: just-a-string\n", encoding="utf-8")
+    assert cc.load_serial_config(str(p)) == {}
 
 
 def test_cmd_apply_save_and_reboot(tmp_path, capsys):
