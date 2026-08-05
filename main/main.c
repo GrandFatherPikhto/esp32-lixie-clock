@@ -4,6 +4,7 @@
 #include "esp_log.h"
 #include "esp_netif.h"
 #include "esp_event.h"
+#include "esp_timer.h"
 #include "nvs_flash.h"
 #include "led_display.h"
 #include "clock_ui.h"
@@ -18,6 +19,10 @@ static const char *TAG = "main";
 static uint8_t led_strip_pixels[CLOCK_LED_NUMBERS_MAX * 3];
 
 #define SYNC_RETRY_DELAY_MS   (10000)
+#define FRAME_PERIOD_US       (30000)   /* ~33 fps display refresh */
+
+static TaskHandle_t display_task_handle = NULL;
+static esp_timer_handle_t frame_timer = NULL;
 
 /* ---------------------------------------------------------------------------
  * Tasks
@@ -37,22 +42,27 @@ static void sync_task(void *arg)
     }
 }
 
+/* Called from the esp_timer ISR: wake the display task to render a frame. */
+static void frame_timer_cb(void *arg)
+{
+    BaseType_t hpw = pdFALSE;
+    vTaskNotifyGiveFromISR(display_task_handle, &hpw);
+    portYIELD_FROM_ISR(hpw);
+}
+
 /* Runs forever: shows the boot animation until the time is synced, then the
- * current time. */
+ * current time. The frame rate is driven by a hardware timer (frame_timer_cb)
+ * instead of vTaskDelay, so animation timing stays stable and smooth. */
 static void display_task(void *arg)
 {
     clock_ui_init();
 
     while (1) {
-        if (time_is_synced()) {
-            clock_ui_fill_time(led_strip_pixels);
-        } else {
-            clock_ui_fill_animation(led_strip_pixels);
-        }
+        /* Wait for the next timer tick; missed ticks are coalesced and the
+         * renderer is time-based, so a slow frame does not speed anything up. */
+        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
+        clock_ui_frame(led_strip_pixels, time_is_synced());
         led_display_send(led_strip_pixels, app_config_get_digits() * 10 * 3);
-
-        /* 500 ms: plenty for the animation, fine for the clock */
-        vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
 
@@ -90,5 +100,14 @@ void app_main(void)
     /* Priority 5: sync gets the CPU when it needs it. */
     xTaskCreate(sync_task, "sync_task", 8192, NULL, 5, NULL);
     /* Priority 4: display. */
-    xTaskCreate(display_task, "display_task", 4096, NULL, 4, NULL);
+    xTaskCreate(display_task, "display_task", 4096, NULL, 4, &display_task_handle);
+
+    /* Hardware timer drives the display refresh: a periodic callback notifies
+     * display_task at ~33 fps (replaces the old vTaskDelay(500 ms) loop). */
+    const esp_timer_create_args_t timer_args = {
+        .callback = frame_timer_cb,
+        .name = "display_frame",
+    };
+    ESP_ERROR_CHECK(esp_timer_create(&timer_args, &frame_timer));
+    ESP_ERROR_CHECK(esp_timer_start_periodic(frame_timer, FRAME_PERIOD_US));
 }

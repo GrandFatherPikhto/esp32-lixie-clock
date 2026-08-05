@@ -143,6 +143,18 @@ int core_config_set_value(clock_config_t *cfg, const char *key,
             return CORE_CFG_ERR_INVALID;
         }
         cfg->night_end = (uint8_t)v;
+    } else if (strcmp(key, "cross_fade") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < 0 || v > CORE_CFG_CROSS_FADE_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->cross_fade = (uint16_t)v;
+    } else if (strcmp(key, "slot_machine_interval") == 0) {
+        if (core_config_parse_int(value, &v) != 0 ||
+            v < CORE_CFG_SLOT_INTERVAL_MIN || v > CORE_CFG_SLOT_INTERVAL_MAX) {
+            return CORE_CFG_ERR_INVALID;
+        }
+        cfg->slot_machine_interval = (uint32_t)v;
     } else {
         return CORE_CFG_ERR_UNKNOWN;
     }

@@ -27,6 +27,10 @@ extern "C" {
 #define CORE_CFG_NIGHT_MODE_MAX           1
 #define CORE_CFG_NIGHT_BRIGHTNESS_MAX     100
 #define CORE_CFG_NIGHT_HOUR_MAX           23
+/* Cross-fade + slot machine: display behaviour switches. */
+#define CORE_CFG_CROSS_FADE_MAX           2000
+#define CORE_CFG_SLOT_INTERVAL_MIN        0
+#define CORE_CFG_SLOT_INTERVAL_MAX        1440
 
 /* Return codes for core_config_set_value(). */
 #define CORE_CFG_OK             0
@@ -55,6 +59,8 @@ typedef struct {
     uint8_t  night_low_brightness;  /* 0..100, brightness used during night hours */
     uint8_t  night_start;           /* 0..23, night window start hour */
     uint8_t  night_end;             /* 0..23, night window end hour (exclusive) */
+    uint16_t cross_fade;            /* fade duration in ms; 0 = off (instant) */
+    uint32_t slot_machine_interval; /* 0=off, else minutes between slot rolls */
 } clock_config_t;
 
 /**

@@ -76,6 +76,7 @@ KNOWN_KEYS = {
     "brightness", "digits", "gpio", "color_mode", "hue", "sync_method",
     "breathing",
     "night_mode", "night_low_brightness", "night_start", "night_end",
+    "cross_fade", "slot_machine_interval",
 }
 
 # YAML top-level sections that are NOT device settings (silently skipped by

@@ -50,6 +50,8 @@ night_mode: false            # master switch for automatic night dimming (0/1 or
 night_low_brightness: 5      # brightness in percent used during night hours (0..100)
 night_start: 23              # night window start hour (0..23, inclusive)
 night_end: 7                 # night window end hour (0..23, exclusive; wraps midnight)
+cross_fade: 150              # fade duration for digit changes in ms (0 = off, instant)
+slot_machine_interval: 30    # minutes between automatic 0..9 "slot machine" rolls (0 = off)
 
 # ---------------------------------------------------------------------------
 # Palettes (color_mode) - switch anytime with: set color_mode=<N>

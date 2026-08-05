@@ -120,4 +120,22 @@ menu "Clock Configuration"
             Can be changed at runtime via the serial console
             (set night_end=<0..23>).
 
+    config CROSS_FADE_DEFAULT
+        int "Cross-fade duration (milliseconds, default)"
+        default 150
+        range 0 2000
+        help
+            Fade duration for digit changes in milliseconds; 0 disables the
+            effect (instant switching). Can be changed at runtime via the
+            serial console (set cross_fade=<0..2000>).
+
+    config SLOT_MACHINE_INTERVAL_DEFAULT
+        int "Slot machine roll interval (minutes, default)"
+        default 30
+        range 0 1440
+        help
+            Period between automatic 0..9 "slot machine" rolls. 0 disables the
+            effect. Can be changed at runtime via the serial console
+            (set slot_machine_interval=<0..1440>).
+
 endmenu

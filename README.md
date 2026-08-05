@@ -85,6 +85,8 @@ Requires `pyserial` and `pyyaml` (`pip install -r tools/requirements.txt`; or us
 | `night_low_brightness` | Brightness during night hours, percent (0..100) | `5` |
 | `night_start` | Night window start hour (0..23, inclusive) | `23` |
 | `night_end` | Night window end hour (0..23, exclusive) | `7` |
+| `cross_fade` | Fade duration for digit changes, ms (0 = off, instant) | `150` |
+| `slot_machine_interval` | Minutes between automatic 0–9 "slot machine" rolls (0 = off) | `30` |
 
 Console commands: `get`, `set`, `save`, `reset`, `reboot`, `status`, `help`.
 

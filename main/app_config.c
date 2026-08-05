@@ -42,6 +42,8 @@ static void set_defaults(void)
     cfg.night_low_brightness = CONFIG_NIGHT_LOW_BRIGHTNESS_DEFAULT;
     cfg.night_start       = CONFIG_NIGHT_START_HOUR_DEFAULT;
     cfg.night_end         = CONFIG_NIGHT_END_HOUR_DEFAULT;
+    cfg.cross_fade        = CONFIG_CROSS_FADE_DEFAULT;  /* fade duration in ms (0 = off) */
+    cfg.slot_machine_interval = CONFIG_SLOT_MACHINE_INTERVAL_DEFAULT;
 #ifdef CONFIG_SNTP_TIME_SYNC_METHOD_SMOOTH
     cfg.sync_method       = 1;
 #else
@@ -147,6 +149,8 @@ void app_config_dump(void)
     printf("night_low_brightness = %u\n", cfg.night_low_brightness);
     printf("night_start       = %u\n", cfg.night_start);
     printf("night_end         = %u\n", cfg.night_end);
+    printf("cross_fade        = %u\n", cfg.cross_fade);
+    printf("slot_machine_interval = %lu\n", (unsigned long)cfg.slot_machine_interval);
 }
 
 /* ---------------------------------------------------------------------------
@@ -169,3 +173,5 @@ uint8_t     app_config_get_night_mode(void)            { return cfg.night_mode; 
 uint8_t     app_config_get_night_low_brightness(void)  { return cfg.night_low_brightness; }
 uint8_t     app_config_get_night_start(void)           { return cfg.night_start; }
 uint8_t     app_config_get_night_end(void)             { return cfg.night_end; }
+uint16_t    app_config_get_cross_fade(void)            { return cfg.cross_fade; }
+uint32_t    app_config_get_slot_machine_interval(void) { return cfg.slot_machine_interval; }
