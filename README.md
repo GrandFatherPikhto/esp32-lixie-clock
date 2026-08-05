@@ -196,6 +196,17 @@ pip install -r tools/requirements.txt
 
 Then run the tools as `python tools/configure_clock.py ...` and `python tools/build_target.py ...` with the venv active.
 
+### 🧪 Tests (Python tooling — no hardware required)
+
+[`configure_clock.py`](tools/configure_clock.py) and [`build_target.py`](tools/build_target.py) are covered by a pytest suite in [`tests/`](tests/) that mocks the serial port and YAML files — **no ESP32 board is needed**. Run it from the project root:
+
+```bash
+.venv\Scripts\python -m pytest tests -v   # Windows
+.venv/bin/python -m pytest tests -v       # Linux/macOS
+```
+
+`pytest` is declared in [`tools/requirements.txt`](tools/requirements.txt) — install it with `pip install -r tools/requirements.txt` if it isn't present.
+
 The firmware is chip-agnostic — only the LED GPIO needs to match your board's wiring.
 
 ---

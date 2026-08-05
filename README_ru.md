@@ -196,6 +196,17 @@ pip install -r tools/requirements.txt
 
 Затем запускайте инструменты `python tools/configure_clock.py ...` и `python tools/build_target.py ...` при активном venv.
 
+### 🧪 Тесты (Python-инструменты — плата не нужна)
+
+[`configure_clock.py`](tools/configure_clock.py) и [`build_target.py`](tools/build_target.py) покрыты набором тестов pytest в [`tests/`](tests/): последовательный порт и YAML-файлы мокаются, поэтому **плата ESP32 не требуется**. Запуск из корня проекта:
+
+```bash
+.venv\Scripts\python -m pytest tests -v   # Windows
+.venv/bin/python -m pytest tests -v       # Linux/macOS
+```
+
+`pytest` объявлен в [`tools/requirements.txt`](tools/requirements.txt) — при необходимости установите через `pip install -r tools/requirements.txt`.
+
 Прошивка не привязана к конкретному чипу — достаточно, чтобы пин ленты соответствовал вашей разводке.
 
 ---

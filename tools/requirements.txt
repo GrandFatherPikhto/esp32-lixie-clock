@@ -2,3 +2,7 @@
 # Install with:  pip install -r tools/requirements.txt
 pyserial>=3.5
 pyyaml>=6.0
+
+# Development / test dependencies (Tier 1 pytest suite in tests/).
+# Install with:  pip install -r tools/requirements.txt
+pytest>=8.0

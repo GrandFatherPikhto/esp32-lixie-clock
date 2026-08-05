@@ -4,11 +4,14 @@
     "board/esp32-wrover-kit-3.3v.cfg"
   ],
   "idf.portWin": "COM5",
-  "idf.currentSetup": "C:\\esp\\v5.5.3\\esp-idf",
+  "idf.currentSetup": "esp-idf-v6.0",
+  "idf.espIdfPath": "C:\\esp\\v6.0.2\\esp-idf",
+  "idf.toolsPath": "C:\\Espressif",
+  "idf.pythonBinPath": "C:\\Espressif\\python_env\\idf6.0_py3.13_env\\Scripts\\python.exe",
   "idf.customExtraVars": {
     "IDF_TARGET": "esp32"
   },
-  "clangd.path": "C:\\Espressif\\tools\\esp-clang\\esp-19.1.2_20250312\\esp-clang\\bin\\clangd.exe",
+  "clangd.path": "C:\\Espressif\\tools\\esp-clang\\esp-20.1.1_20250829\\esp-clang\\bin\\clangd.exe",
   "clangd.arguments": [
     "--background-index",
     "--query-driver=**",
