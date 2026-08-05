@@ -12,9 +12,21 @@ A digital clock with "pseudo-vacuum-tube" display based on WS2812 LED strips and
 - Each digit uses **10 LEDs** (0–9) – only the required digit lights up per position.
 - **6 colour palettes** (`color_mode` 0–5): Garland (original per-pair rotation), Mono (one fixed hue), Triad (fixed per-pair colours), Spectrum (rainbow sweep), Prism (static colour per digit), Chronos (colour encodes the time) — plus an optional **breathing** brightness pulse.
 - **Boot animation** (digits 0–9 chase) shown until the first successful time sync.
+- **Cross-fade** between digit changes — configurable duration in milliseconds (0 = instant).
+- **Slot-machine effect** — a periodic 0–9 roll across all digits (interval in minutes, 0 = off).
+- **Night mode** — automatic brightness reduction in a configurable night window.
+- **Palette phase shift and secondary hue** — rotate every palette (`hue_shift`) and add a two-tone Mono (`hue_2`).
+- **Wi-Fi power save** — switch the radio off after time sync and re-sync on an interval while the display keeps running.
 - Automatic time synchronisation via **NTP** with a runtime-configurable interval.
 - **Runtime configuration over USB**: NTP server, sync interval, timezone, Wi-Fi SSID/password, brightness, digit count, LED GPIO, colour mode — all changeable from a PC via the `configure_clock.py` tool, persisted to NVS.
 - Builds for all major ESP32 variants (`esp32`, `esp32-s2`, `esp32-s3`, `esp32-c3`, `esp32-c6`, `esp32-h2`).
+
+---
+
+## 📚 Documentation
+
+- [**Architecture**](docs/architect.md) — modules, data flow, the stateful renderer, tasks and Wi-Fi power save.
+- [**Tests**](docs/tests.md) — the three test tiers, environment setup and how to run them on Windows and Linux/WSL.
 
 ---
 
@@ -210,6 +222,8 @@ Then run the tools as `python tools/configure_clock.py ...` and `python tools/bu
 
 ### 🧪 Tests (Python tooling — no hardware required)
 
+> Full setup instructions for all three test tiers (Windows + Linux/WSL) are in [**docs/tests.md**](docs/tests.md).
+
 [`configure_clock.py`](tools/configure_clock.py) and [`build_target.py`](tools/build_target.py) are covered by a pytest suite in [`tests/`](tests/) that mocks the serial port and YAML files — **no ESP32 board is needed**. Run it from the project root:
 
 ```bash
@@ -240,7 +254,7 @@ The pure firmware logic lives in [`core/`](core/) (config parsing/validation, ti
 The script compiles `core/src/*.c` + Unity (from `$IDF_PATH`) + [`tests/c/test_core.c`](tests/c/test_core.c) into `build_host/` and runs it. Expected output:
 
 ```
-14 Tests 0 Failures 0 Ignored
+15 Tests 0 Failures 0 Ignored
 OK
 ```
 
@@ -250,8 +264,8 @@ These tests exercise the exact functions the firmware uses (`core_config_set_val
 
 The repo ships a GitHub Actions workflow ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)) that runs on **every push / pull request** on Ubuntu (real Linux — no board or local setup needed):
 
-- **Python tools (Tier 1)** — `pytest` for `configure_clock.py` / `build_target.py` (47 tests).
-- **Host C unit tests (Tier 2)** — Unity tests for the `core/` logic (14 tests).
+- **Python tools (Tier 1)** — `pytest` for `configure_clock.py` / `build_target.py` (48 tests).
+- **Host C unit tests (Tier 2)** — Unity tests for the `core/` logic (15 tests).
 - **Firmware builds (Tier 3)** — builds **all** supported targets in parallel: `esp32`, `esp32s2`, `esp32s3`, `esp32c3`, `esp32c6`, `esp32h2`.
 
 A green ✅ on a commit means everything passes; a red ❌ catches compile regressions for any chip, tool regressions, or core-logic bugs automatically. Just push and open the **Actions** tab on GitHub (enable Actions under *Settings → Actions* if the repo disallows them).
@@ -262,7 +276,7 @@ The firmware is chip-agnostic — only the LED GPIO needs to match your board's 
 
 ## 🧱 Code Architecture
 
-The project is modular for easier maintenance and extension:
+The project is modular for easier maintenance and extension. Full details: [**docs/architect.md**](docs/architect.md).
 
 | Module | Purpose |
 |--------|---------|
@@ -270,14 +284,15 @@ The project is modular for easier maintenance and extension:
 | **`config_console`** | ESP Console REPL on UART0 (USB). Registers `get`, `set`, `save`, `reset`, `reboot`, `status` commands. |
 | **`wifi_manager`** | Wi-Fi STA connection using the runtime SSID/password, with automatic reconnect and IP-wait. |
 | **`led_display`** | RMT channel + encoder init and `led_display_send()` to push pixel buffers. |
-| **`clock_ui`** | Frame generation: HSV→RGB, digit placement, brightness/colour handling. `clock_ui_fill_time()` and `clock_ui_fill_animation()` render into a caller-provided buffer. |
-| **`sntp_sync`** | SNTP init with runtime settings, first-sync wait, sync-status flag. |
+| **`core`** | Pure, host-testable logic (no ESP-IDF): `core_config` (config parsing/validation), `core_time` (UTC→local, night window), `core_display` (digit placement, HSV→RGB). |
+| **`clock_ui`** | Stateful per-frame renderer (`clock_ui_frame()`): boot animation, time, cross-fade, slot machine, palettes, night mode, breathing. |
+| **`sntp_sync`** | One-shot / background SNTP sync with runtime settings; `time_is_synced()` flag; Wi-Fi power-save support. |
 | **`led_strip_encoder`** | WS2812-specific RMT encoder. |
 | **`main`** | Startup orchestration and FreeRTOS tasks: `sync_task` and `display_task`. |
 
 ### FreeRTOS Tasks
-- **`sync_task`** (priority 5) – connects Wi-Fi and calls `init_sntp()`; on success sets the sync flag and exits; on failure retries every 10 s.
-- **`display_task`** (priority 4) – loops every 500 ms. Before sync: boot animation; after sync: current time. Owns the pixel buffer.
+- **`sync_task`** (priority 5) – connects Wi-Fi and calls `init_sntp()`; on success it exits (or, with Wi-Fi power save, switches the radio off and re-syncs every `sync_interval`); on failure retries every 10 s.
+- **`display_task`** (priority 4) – driven by a 30 ms `esp_timer` hardware timer (not `vTaskDelay`); renders one frame per tick via `clock_ui_frame()` and owns the pixel buffer. Before sync: boot animation; after: current time.
 
 ---
 
@@ -291,8 +306,8 @@ The project is modular for easier maintenance and extension:
 | `wifi_manager_connect()` | Connects to the configured Wi-Fi and waits for an IP (retries in background). |
 | `led_display_init()` | Initialises RMT + encoder using the runtime LED GPIO. |
 | `led_display_send(pixels, size)` | Sends a pixel array to the strip (blocking). |
-| `clock_ui_fill_time(pixels)` | Renders the current time into the buffer. |
-| `clock_ui_fill_animation(pixels)` | Renders the boot animation into the buffer. |
+| `clock_ui_frame(pixels, synced)` | Renders one stateful frame (boot / time / cross-fade / slot / night). |
+| `core_time_is_night_hour()` | Checks whether an hour falls inside the configured night window. |
 | `init_sntp()` | Connects, starts SNTP and waits for the first sync; returns success. |
 | `time_is_synced()` | `true` only after a successful time sync. |
 
@@ -324,4 +339,4 @@ Inspired by the *Lixie* and *Edge-Lit* clock concepts. Uses examples from Espres
 - Add date or temperature display (with a sensor).
 - Switch colour schemes via a button (in addition to the console).
 - Build a web interface for configuration.
-- Optimise power consumption (disconnect Wi-Fi between syncs).
+- More palette modes / custom colour gradients.
