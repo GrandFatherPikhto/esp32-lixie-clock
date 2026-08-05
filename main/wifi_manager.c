@@ -22,8 +22,14 @@ static void event_handler(void *arg, esp_event_base_t base, int32_t id, void *da
     if (base == WIFI_EVENT && id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (base == WIFI_EVENT && id == WIFI_EVENT_STA_DISCONNECTED) {
-        ESP_LOGW(TAG, "Wi-Fi disconnected, reconnecting...");
-        esp_wifi_connect();
+        /* esp_wifi_stop() (used by wifi_manager_disconnect() for power save)
+         * posts this same event on a connected station; s_started is cleared
+         * right after that call, so checking it here tells an unexpected
+         * drop (reconnect) apart from an intentional shutdown (stay down). */
+        if (s_started) {
+            ESP_LOGW(TAG, "Wi-Fi disconnected, reconnecting...");
+            esp_wifi_connect();
+        }
     } else if (base == IP_EVENT && id == IP_EVENT_STA_GOT_IP) {
         ip_event_got_ip_t *event = (ip_event_got_ip_t *)data;
         ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));

@@ -104,7 +104,7 @@ static void register_clock_commands(void)
           .func = cmd_save },
         { .command = "reset",  .help = "Restore default configuration and save it",
           .func = cmd_reset },
-        { .command = "reboot", .help = "Restart the device (applies gpio/digits changes)",
+        { .command = "reboot", .help = "Restart the device (applies gpio changes)",
           .func = cmd_reboot },
         { .command = "status", .help = "Show Wi-Fi / time sync / display status",
           .func = cmd_status },

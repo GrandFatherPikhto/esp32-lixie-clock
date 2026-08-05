@@ -67,7 +67,7 @@ python tools/configure_clock.py get
 # Set several parameters (applies immediately; SSID/password needed for Wi-Fi)
 python tools/configure_clock.py set ssid=MyWiFi password=secret ntp_server=pool.ntp.org
 
-# Persist to flash (NVS) and reboot (reboot applies gpio/digits)
+# Persist to flash (NVS) and reboot (reboot applies gpio; digits applies immediately)
 python tools/configure_clock.py save
 python tools/configure_clock.py reboot
 
