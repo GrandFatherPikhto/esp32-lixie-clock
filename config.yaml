@@ -13,28 +13,35 @@
 # NOTE: ssid / password are Wi-Fi credentials for the AP the clock connects
 # to. Store this file outside version control if you don't want to commit
 # your real network credentials.
+#
+# Original project defaults (git history, before the runtime-config rewrite):
+#   - GPIO 14, digits 6, NTP "pool.ntp.org", sync every 3600 s (immediate)
+#   - timezone Moscow UTC+3 (the firmware used setenv("TZ","MSK-3",1))
+#   - rotating colors (pairs at hue 0 / 120 / 240), full brightness
+# The values below keep exactly that behavior. ssid / password are runtime-only
+# additions (the original had no runtime Wi-Fi settings).
 # ============================================================================
 
 # --- Wi-Fi -----------------------------------------------------------------
-ssid: "MyWiFi"
-password: "change-me"
+ssid: "MyWiFi"           # fill in your real network name
+password: "change-me"    # fill in your real network password
 
 # --- Time / NTP ------------------------------------------------------------
-ntp_server: "pool.ntp.org"   # NTP hostname
-sync_interval: 3600          # NTP sync period in seconds (30 .. 604800)
-tz_offset: 180               # UTC offset in minutes (UTC+3 Moscow = 180)
-sync_method: 0               # 0 = immediate jump, 1 = smooth (adjtime)
+ntp_server: "pool.ntp.org"   # NTP hostname (original default)
+sync_interval: 3600          # NTP sync period in seconds (30 .. 604800) - original 3600
+tz_offset: 180               # UTC offset in minutes; 180 = UTC+3 (Moscow, original "MSK-3")
+sync_method: 0               # 0 = immediate jump (original), 1 = smooth (adjtime)
 
 # --- Display ---------------------------------------------------------------
-digits: 6                    # number of digits shown (1 .. max digits)
-brightness: 100              # LED brightness in percent (0 .. 100)
-gpio: 14                     # WS2812 data GPIO (applies after reboot)
-color_mode: 0                # 0 = rotating colors, 1 = fixed color
-hue: 200                     # fixed hue (0 .. 359), used when color_mode = 1
+digits: 6                    # number of digits shown (original default 6)
+brightness: 100              # LED brightness in percent (original: full)
+gpio: 14                     # WS2812 data GPIO (original default 14; applies after reboot)
+color_mode: 0                # 0 = rotating colors (original), 1 = fixed color
+hue: 200                     # fixed hue (0 .. 359), only used when color_mode = 1
 
 # --- Build defaults (tools/build_target.py) --------------------------------
 build:
-  target: "esp32"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
+  target: "esp32s3"            # esp32, esp32s2, esp32s3, esp32c3, esp32c6, esp32h2
   menuconfig: false          # open menuconfig before building
   clean: false               # run a full clean build
   flash: false               # flash the firmware after building
